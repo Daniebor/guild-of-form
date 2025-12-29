@@ -1,3 +1,5 @@
+'use client';
+
 import { createContext, useContext, useState, ReactNode } from 'react';
 import { GameState } from '../types';
 import { initialGameState } from '../data/mockData';

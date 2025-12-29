@@ -1,9 +1,12 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useGame } from '../context/GameContext';
+'use client';
 
-const GuildHall = () => {
-    const navigate = useNavigate();
+import { useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useGame } from '../../context/GameContext';
+
+export default function GuildHall() {
+    const router = useRouter();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const { player, bounties, chapters, activeMissionId } = useGame();
 
@@ -29,11 +32,11 @@ const GuildHall = () => {
                         <h1 className="text-xl font-bold tracking-tight text-white">The Sculptor's Saga</h1>
                     </div>
                     <nav className="flex-1 flex flex-col gap-2 p-4">
-                        <Link to="/dashboard" className="flex items-center gap-4 px-4 py-3 rounded-lg bg-primary/10 border border-primary/20 group transition-all">
+                        <Link href="/dashboard" className="flex items-center gap-4 px-4 py-3 rounded-lg bg-primary/10 border border-primary/20 group transition-all">
                             <span className="material-symbols-outlined text-primary" style={{fontVariationSettings: "'FILL' 1"}}>castle</span>
                             <span className="text-primary font-bold text-sm">Guild Hall</span>
                         </Link>
-                        <Link to="/map" className="flex items-center gap-4 px-4 py-3 rounded-lg hover:bg-white/5 transition-colors text-text-muted hover:text-white">
+                        <Link href="/map" className="flex items-center gap-4 px-4 py-3 rounded-lg hover:bg-white/5 transition-colors text-text-muted hover:text-white">
                             <span className="material-symbols-outlined" style={{fontVariationSettings: "'FILL' 0"}}>map</span>
                             <span className="font-medium text-sm">World Map</span>
                         </Link>
@@ -146,7 +149,7 @@ const GuildHall = () => {
                                             </div>
                                         </div>
                                         <div className="w-full mt-4 flex justify-end">
-                                            <button onClick={() => navigate('/mission')} className="w-full md:w-auto min-w-[160px] cursor-pointer relative overflow-hidden rounded-lg bg-primary hover:bg-primary-dark text-black font-bold text-sm px-6 py-3 transition-all transform active:scale-95 shadow-[0_0_15px_rgba(245,159,10,0.3)] hover:shadow-[0_0_20px_rgba(245,159,10,0.6)] flex items-center justify-center gap-2 group/btn">
+                                            <button onClick={() => router.push('/mission')} className="w-full md:w-auto min-w-[160px] cursor-pointer relative overflow-hidden rounded-lg bg-primary hover:bg-primary-dark text-black font-bold text-sm px-6 py-3 transition-all transform active:scale-95 shadow-[0_0_15px_rgba(245,159,10,0.3)] hover:shadow-[0_0_20px_rgba(245,159,10,0.6)] flex items-center justify-center gap-2 group/btn">
                                                 <span>Continue Lesson</span>
                                                 <span className="material-symbols-outlined text-lg transition-transform group-hover/btn:translate-x-1">play_arrow</span>
                                             </button>
@@ -198,11 +201,11 @@ const GuildHall = () => {
                     </div>
 
                     <nav className="lg:hidden sticky bottom-0 w-full bg-[#1c1914] border-t border-border-dark flex justify-around p-2 z-30 pb-safe">
-                        <Link to="/dashboard" className="flex flex-col items-center gap-1 p-2 text-primary">
+                        <Link href="/dashboard" className="flex flex-col items-center gap-1 p-2 text-primary">
                             <span className="material-symbols-outlined" style={{fontVariationSettings: "'FILL' 1"}}>castle</span>
                             <span className="text-[10px] font-medium">Guild</span>
                         </Link>
-                        <Link to="/map" className="flex flex-col items-center gap-1 p-2 text-text-muted">
+                        <Link href="/map" className="flex flex-col items-center gap-1 p-2 text-text-muted">
                             <span className="material-symbols-outlined">map</span>
                             <span className="text-[10px] font-medium">Map</span>
                         </Link>
@@ -212,5 +215,3 @@ const GuildHall = () => {
         </div>
     );
 };
-
-export default GuildHall;

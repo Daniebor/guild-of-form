@@ -1,8 +1,11 @@
-import { useNavigate, Link } from 'react-router-dom';
-import { useGame } from '../context/GameContext';
+'use client';
 
-const CampaignMap = () => {
-    const navigate = useNavigate();
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useGame } from '../../context/GameContext';
+
+export default function CampaignMap() {
+    const router = useRouter();
     const { chapters, activeMissionId, setActiveMission } = useGame();
 
     // Find active chapter based on active mission
@@ -16,7 +19,7 @@ const CampaignMap = () => {
             <div className="fixed inset-0 z-0 pointer-events-none opacity-[0.05]" style={{backgroundSize: "40px 40px", backgroundImage: "linear-gradient(to right, #ffffff 1px, transparent 1px), linear-gradient(to bottom, #ffffff 1px, transparent 1px)"}}></div>
             
             <header className="relative z-20 flex items-center justify-between border-b border-[#333]/50 bg-void/80 backdrop-blur-sm px-6 py-4">
-                <Link to="/dashboard" className="flex items-center gap-3 group">
+                <Link href="/dashboard" className="flex items-center gap-3 group">
                     <div className="size-8 text-primary flex items-center justify-center rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
                         <span className="material-symbols-outlined text-2xl">token</span>
                     </div>
@@ -25,7 +28,7 @@ const CampaignMap = () => {
                     <div className="flex items-center justify-center bg-[#1a1a1a] text-gray-400 hover:text-white transition-colors size-9 rounded-full cursor-pointer border border-[#333]">
                         <span className="material-symbols-outlined text-[20px]">settings</span>
                     </div>
-                    <div onClick={() => navigate('/dashboard')} className="size-9 rounded-full bg-cover bg-center border border-[#333] cursor-pointer" style={{backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuALH76sJHTKGe7c5HsW83pJTLXrWup44fjbCCtt_sl_tmDx0yHBFPXPlBERQiods16e8GCoe9fT9fajZdcruPjgZTem1MRmAA8_ZNqHl2W05_-P-RoFnqYoQr88BCqUnf8VV3Cioh6459HJCRjJ87gCvi0RHh3TaAhD9yn1lsr52thvqhtbT6l2W2DyYxtd9-TcbbbGvASNVlrPP_USSy6pNakkW29IYD5CtH2nxQrWgtDG4kaU5jJJyLxacWv51XjRMuS0LJ2yLZs')"}}></div>
+                    <div onClick={() => router.push('/dashboard')} className="size-9 rounded-full bg-cover bg-center border border-[#333] cursor-pointer" style={{backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuALH76sJHTKGe7c5HsW83pJTLXrWup44fjbCCtt_sl_tmDx0yHBFPXPlBERQiods16e8GCoe9fT9fajZdcruPjgZTem1MRmAA8_ZNqHl2W05_-P-RoFnqYoQr88BCqUnf8VV3Cioh6459HJCRjJ87gCvi0RHh3TaAhD9yn1lsr52thvqhtbT6l2W2DyYxtd9-TcbbbGvASNVlrPP_USSy6pNakkW29IYD5CtH2nxQrWgtDG4kaU5jJJyLxacWv51XjRMuS0LJ2yLZs')"}}></div>
                 </div>
             </header>
 
@@ -57,7 +60,7 @@ const CampaignMap = () => {
                                         ${isActive ? 'bg-gradient-to-br from-[#2a2418] to-[#1a1814] border-primary node-glow-active' : ''}
                                         ${isLocked ? 'bg-[#151515] border-[#333] size-16' : ''}
                                     `}
-                                    onClick={() => isActive && navigate('/mission')}
+                                    onClick={() => isActive && router.push('/mission')}
                                 >
                                     <span className={`material-symbols-outlined ${isActive ? 'text-5xl animate-pulse' : 'text-2xl'} ${isCompleted ? 'text-3xl font-bold' : ''} ${isLocked ? 'text-gray-500' : 'text-primary'}`}>
                                         {isCompleted ? 'check' : isLocked ? 'lock' : 'category'}
@@ -120,7 +123,7 @@ const CampaignMap = () => {
                                         key={mission.id} 
                                         onClick={() => {
                                             setActiveMission(mission.id);
-                                            navigate('/mission');
+                                            router.push('/mission');
                                         }} 
                                         className={`flex items-center gap-3 p-3 rounded-lg bg-[#1a1a1a]/50 border border-[#333] hover:border-primary/30 transition-colors cursor-pointer group ${mission.id === activeMissionId ? 'border-primary/40 bg-primary/5' : ''}`}
                                     >
@@ -133,7 +136,7 @@ const CampaignMap = () => {
                                     </div>
                                 ))}
                             </div>
-                            <button onClick={() => navigate('/mission')} className="w-full py-3.5 px-4 bg-primary text-black font-bold text-base rounded-lg shadow-lg shadow-primary/20 hover:bg-primary-dark transition-all flex items-center justify-center gap-2">
+                            <button onClick={() => router.push('/mission')} className="w-full py-3.5 px-4 bg-primary text-black font-bold text-base rounded-lg shadow-lg shadow-primary/20 hover:bg-primary-dark transition-all flex items-center justify-center gap-2">
                                 <span className="material-symbols-outlined">play_arrow</span>
                                 Start Mission
                             </button>
@@ -144,5 +147,3 @@ const CampaignMap = () => {
         </div>
     );
 };
-
-export default CampaignMap;

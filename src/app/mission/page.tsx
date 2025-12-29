@@ -1,8 +1,11 @@
-import { useNavigate, Link } from 'react-router-dom';
-import { useGame } from '../context/GameContext';
+'use client';
 
-const MissionScroll = () => {
-    const navigate = useNavigate();
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useGame } from '../../context/GameContext';
+
+export default function MissionScroll() {
+    const router = useRouter();
     const { chapters, activeMissionId, toggleObjective, completeMission } = useGame();
 
     // Find active mission data
@@ -14,7 +17,7 @@ const MissionScroll = () => {
             <div className="min-h-screen bg-background-dark text-white flex items-center justify-center">
                 <div className="text-center">
                     <p className="mb-4">No active mission found.</p>
-                    <Link to="/map" className="text-primary hover:underline">Return to Map</Link>
+                    <Link href="/map" className="text-primary hover:underline">Return to Map</Link>
                 </div>
             </div>
         );
@@ -24,14 +27,14 @@ const MissionScroll = () => {
 
     const handleComplete = () => {
         completeMission(activeMission.id);
-        navigate('/map');
+        router.push('/map');
     };
 
     return (
         <div className="bg-background-light dark:bg-background-dark min-h-screen flex flex-col font-newsreader text-[#e5e5e5] custom-scrollbar overflow-x-hidden">
             {/* Header matching Map style */}
             <header className="relative z-20 flex items-center border-b border-[#333]/50 bg-background-dark/80 backdrop-blur-sm px-6 py-4">
-                <Link to="/dashboard" className="flex items-center gap-3 group">
+                <Link href="/dashboard" className="flex items-center gap-3 group">
                     <div className="size-8 text-primary flex items-center justify-center rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
                         <span className="material-symbols-outlined text-2xl">token</span>
                     </div>
@@ -41,7 +44,7 @@ const MissionScroll = () => {
             <div className="flex-grow flex flex-col items-center w-full pb-28">
                 <div className="w-full max-w-[960px] px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-8">
                     <nav className="flex flex-wrap items-center gap-2 text-sm font-noto tracking-wide">
-                        <Link to="/map" className="text-[#8a8175] hover:text-primary transition-colors">Chapter {activeChapter.sequence}</Link>
+                        <Link href="/map" className="text-[#8a8175] hover:text-primary transition-colors">Chapter {activeChapter.sequence}</Link>
                         <span className="material-symbols-outlined text-[#8a8175] text-xs">chevron_right</span>
                         <span className="text-primary font-medium">{activeMission.title}</span>
                     </nav>
@@ -152,5 +155,3 @@ const MissionScroll = () => {
         </div>
     );
 };
-
-export default MissionScroll;
