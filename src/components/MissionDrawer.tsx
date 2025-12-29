@@ -1,9 +1,10 @@
 'use client';
 
 import { Chapter } from '@/lib/types';
-import { X } from 'lucide-react';
+import { X, ExternalLink, Brush, Box } from 'lucide-react';
 import { useUserStore } from '@/store/userStore';
 import { motion, AnimatePresence } from 'framer-motion';
+import Link from 'next/link';
 
 interface MissionDrawerProps {
   chapter: Chapter | null;
@@ -11,94 +12,104 @@ interface MissionDrawerProps {
 }
 
 export default function MissionDrawer({ chapter, onClose }: MissionDrawerProps) {
-  const { completeMission, addXp, completedMissionIds, completedBossIds } = useUserStore();
+  const { completedMissionIds } = useUserStore();
 
-  const handleCompleteMission = (missionId: string, xp: number) => {
-    if (completedMissionIds.includes(missionId)) return;
-    addXp(xp);
-    completeMission(missionId);
-  };
+  if (!chapter) return null;
+
+  const missionIdsInChapter = chapter.missions.map(m => m.id);
+  const areAllMissionsCompleted = missionIdsInChapter.every(id => completedMissionIds.includes(id));
   
-  const handleDefeatBoss = (bossTitle: string, xp: number) => {
-    if (completedBossIds.includes(bossTitle) || !chapter) return;
-    addXp(xp);
-    completeMission(chapter.id, bossTitle); // Use chapter.id as a mission id for the boss
-  }
-
   return (
     <AnimatePresence>
       {chapter && (
-        <motion.div
-          className="fixed inset-0 bg-black/60 z-10"
-          onClick={onClose}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-        >
-          <motion.div
-            className="fixed top-0 right-0 h-full w-full max-w-md bg-dungeon-wall border-l-2 border-stone p-6 overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-            initial={{ x: '100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '100%' }}
-            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-          >
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-serif text-primary">{chapter.title}</h2>
-              <button onClick={onClose} className="text-text-muted hover:text-text-main">
-                <X />
-              </button>
-            </div>
-            
-            <div className="space-y-4">
-                {chapter.missions.map(mission => {
-                    const isCompleted = completedMissionIds.includes(mission.id);
-                    return (
-                        <div key={mission.id} className={`p-4 rounded-lg ${isCompleted ? 'bg-green-900/50' : 'bg-void'}`}>
-                            <h3 className="font-bold text-lg">{mission.title}</h3>
-                            <p className="text-sm text-text-muted italic my-2">"{mission.intel}"</p>
-                            <p className="mb-2">{mission.task}</p>
-                            <div className="flex justify-end items-center">
-                                <span className="text-primary mr-4">{mission.xp} XP</span>
-                                <button 
-                                    disabled={isCompleted}
-                                    onClick={() => handleCompleteMission(mission.id, mission.xp)}
-                                    className="bg-primary-bg disabled:bg-stone text-void font-bold py-1 px-3 rounded text-sm"
-                                >
-                                    {isCompleted ? 'Completed' : 'Complete'}
-                                </button>
-                            </div>
-                        </div>
-                    )
-                })}
-                
-                {chapter.trainingMontage && (
-                     <div className="p-4 rounded-lg bg-void">
-                        <h3 className="font-bold text-lg">{chapter.trainingMontage.title}</h3>
-                        <p className="italic text-text-muted my-2">Drill:</p>
-                        <p className="mb-2">{chapter.trainingMontage.drill}</p>
-                        <p className="text-sm text-primary text-right">{chapter.trainingMontage.xp} XP (auto-completed)</p>
-                     </div>
-                )}
+        <div className="fixed bottom-0 left-0 right-0 z-40 flex justify-center pointer-events-none h-screen items-end">
+            <div 
+                className="absolute inset-0 pointer-events-auto" 
+                onClick={onClose}
+            ></div>
 
-                <div className={`p-4 rounded-lg bg-red-900/50 border-2 ${completedBossIds.includes(chapter.boss.title) ? 'border-green-500' : 'border-red-500'}`}>
-                    <h3 className="font-bold text-lg text-red-400">Boss Fight: {chapter.boss.title}</h3>
-                    <p className="text-sm text-text-muted my-2">"{chapter.boss.test}"</p>
-                    <p className="mb-2">{chapter.boss.winCondition}</p>
-                    <div className="flex justify-end items-center">
-                        <span className="text-red-400 mr-4">{chapter.boss.xp} XP</span>
-                         <button 
-                            disabled={completedBossIds.includes(chapter.boss.title)}
-                            onClick={() => handleDefeatBoss(chapter.boss.title, chapter.boss.xp)}
-                            className="bg-red-500 disabled:bg-stone text-white font-bold py-1 px-3 rounded text-sm"
-                        >
-                            {completedBossIds.includes(chapter.boss.title) ? 'Defeated' : 'Defeat Boss'}
-                        </button>
+            <motion.div
+                className="glass-panel w-full max-w-2xl rounded-t-2xl p-1 pointer-events-auto shadow-2xl shadow-black relative z-50 bg-[#141414]/90 backdrop-blur-xl border-t border-[#333]"
+                initial={{ y: '100%' }}
+                animate={{ y: 0 }}
+                exit={{ y: '100%' }}
+                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                onClick={(e) => e.stopPropagation()}
+            >
+                <div className="w-full flex justify-center pt-3 pb-1 cursor-grab active:cursor-grabbing" onClick={onClose}>
+                    <div className="w-12 h-1.5 rounded-full bg-gray-600/50"></div>
+                </div>
+
+                <div className="px-6 pb-8 pt-2 max-h-[80vh] overflow-y-auto custom-scrollbar">
+                    <div className="flex items-start justify-between mb-6">
+                        <div>
+                            <h3 className="text-primary text-sm font-bold uppercase tracking-widest mb-1">Current Chapter</h3>
+                            <h2 className="text-white text-2xl font-bold leading-tight">{chapter.title}</h2>
+                            <p className="text-text-muted text-sm mt-1">{chapter.goal}</p>
+                        </div>
+                        <div className="size-12 rounded-lg bg-[#2a2418] border border-primary/20 flex items-center justify-center text-primary">
+                            <Box className="size-6" />
+                        </div>
+                    </div>
+
+                    <div className="space-y-3 mb-8">
+                        <h4 className="text-gray-300 text-xs font-bold uppercase tracking-wider mb-2">Objectives</h4>
+                        
+                        {chapter.missions.map(mission => {
+                            const isCompleted = completedMissionIds.includes(mission.id);
+                            return (
+                                <Link 
+                                    key={mission.id}
+                                    href={`/mission/${mission.id}`}
+                                    onClick={onClose}
+                                    className="flex items-center justify-between p-3 rounded-lg bg-[#1a1a1a]/50 border border-[#333] hover:border-primary/30 transition-colors cursor-pointer group"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className={`h-5 w-5 rounded border flex items-center justify-center transition-all ${isCompleted ? 'border-primary bg-primary text-black' : 'border-gray-500 bg-transparent'}`}>
+                                            {isCompleted && <ExternalLink size={12} />}
+                                        </div>
+                                        <span className={`text-sm font-medium transition-colors ${isCompleted ? 'text-gray-300 line-through opacity-60' : 'text-white'}`}>
+                                            {mission.title}
+                                        </span>
+                                    </div>
+                                    <span className="text-xs text-primary">{mission.xp} XP</span>
+                                </Link>
+                            )
+                        })}
+                    </div>
+
+                    <div className={`p-4 rounded-lg border-2 ${useUserStore.getState().completedBossIds.includes(chapter.boss.title) ? 'bg-green-900/20 border-green-900/50' : 'bg-red-900/10 border-red-900/30'}`}>
+                        <div className="flex justify-between items-center mb-2">
+                            <h3 className="font-bold text-lg text-white">Boss: {chapter.boss.title}</h3>
+                            <span className="text-red-400 text-sm font-bold">{chapter.boss.xp} XP</span>
+                        </div>
+                        <p className="text-sm text-text-muted mb-4">{chapter.boss.test}</p>
+                        
+                        <div className="relative group">
+                            <Link
+                                href={areAllMissionsCompleted ? `/mission/${chapter.id}` : '#'}
+                                onClick={(e) => {
+                                    if (!areAllMissionsCompleted) e.preventDefault();
+                                    else onClose();
+                                }}
+                                className={`w-full py-3 px-4 bg-primary text-black font-bold text-base rounded-lg shadow-[0_0_15px_rgba(245,159,10,0.4)] transition-all flex items-center justify-center gap-2 ${
+                                    !areAllMissionsCompleted ? 'opacity-50 cursor-not-allowed' : 'hover:bg-amber-500 hover:shadow-[0_0_25px_rgba(245,159,10,0.6)]'
+                                }`}
+                                aria-disabled={!areAllMissionsCompleted}
+                            >
+                                <Brush size={18} />
+                                Enter Workshop
+                            </Link>
+                            {!areAllMissionsCompleted && (
+                                <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-max p-2 bg-black text-white text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                                    Complete all objectives to unlock the boss.
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
-            </div>
-          </motion.div>
-        </motion.div>
+            </motion.div>
+        </div>
       )}
     </AnimatePresence>
   );
