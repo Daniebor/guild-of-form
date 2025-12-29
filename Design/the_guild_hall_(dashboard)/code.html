@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>The Guild Hall</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Theme Config -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#f59f0a",
+                        "primary-dark": "#b45309",
+                        "secondary": "#3b82f6", 
+                        "background-light": "#f8f7f5",
+                        "background-dark": "#181511", 
+                        "surface-dark": "#221c10",
+                        "card-dark": "#27231b",
+                        "border-dark": "#393328",
+                        "text-muted": "#baaf9c",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>/* Custom Hexagon Shape Class */
+.hex-avatar {
+    clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%)
+    }
+/* Custom Glow for Progress Bar */
+.glow-bar {
+    box-shadow: 0 0 15px rgba(245, 159, 10, 0.4)
+    }
+/* Subtle noise texture for card background */
+.bg-noise {
+    background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuA7_wIU2jNK8WZENJhW2Syb5kEwTu3ScAmFZj8FOc30bn43br8AZPl6uPZSPr2lw6nvF1oSkgujyxUaLv2_stnikaflYurncZLx7pEGeGpZ64AH6czOdDhH-QyxPekZ_AWTtY5mPMqBmFWDdMNWbVUZw2gsR7zpRTsrMfI6QRpQupFTJ578sJg2vvoK5uSWfqKUr_LJKdSxqyhcVwOHwsLrO7RPqtaCDlmq1MqFNslzskLG21ad-pdOgBpRf3M7F0mg5UkxUVXtESA)
+    }</style>
+</head>
+<body class="bg-background-dark text-white font-display overflow-hidden selection:bg-primary selection:text-black">
+<div class="flex h-screen w-full">
+<!-- Side Navigation (Desktop) -->
+<aside class="w-72 hidden lg:flex flex-col border-r border-border-dark bg-[#1c1914]">
+<div class="p-6 border-b border-border-dark flex items-center gap-3">
+<div class="size-8 text-primary">
+<span class="material-symbols-outlined !text-3xl">token</span>
+</div>
+<h1 class="text-xl font-bold tracking-tight text-white">The Guild Hall</h1>
+</div>
+<nav class="flex-1 flex flex-col gap-2 p-4">
+<!-- Active Item -->
+<a class="flex items-center gap-4 px-4 py-3 rounded-lg bg-primary/10 border border-primary/20 group transition-all" href="#">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">castle</span>
+<span class="text-primary font-bold text-sm">Guild Hall</span>
+</a>
+<!-- Inactive Items -->
+<a class="flex items-center gap-4 px-4 py-3 rounded-lg hover:bg-white/5 transition-colors text-text-muted hover:text-white" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">map</span>
+<span class="font-medium text-sm">World Map</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 rounded-lg hover:bg-white/5 transition-colors text-text-muted hover:text-white" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">menu_book</span>
+<span class="font-medium text-sm">Grimoire</span>
+</a>
+<div class="mt-8 px-4">
+<p class="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">My Guild</p>
+<a class="flex items-center gap-4 px-0 py-2 transition-colors text-text-muted hover:text-white" href="#">
+<span class="material-symbols-outlined text-sm">groups</span>
+<span class="font-medium text-sm">Sculptors of Ash</span>
+</a>
+</div>
+</nav>
+<div class="p-4 border-t border-border-dark">
+<button class="flex w-full items-center gap-3 rounded-lg p-2 hover:bg-white/5 transition-colors">
+<div class="size-8 rounded-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center border border-gray-600">
+<span class="material-symbols-outlined text-xs text-white">settings</span>
+</div>
+<div class="flex flex-col items-start">
+<span class="text-sm font-medium text-white">Settings</span>
+</div>
+</button>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col h-full relative overflow-y-auto bg-background-dark">
+<!-- Mobile Header (Visible only on small screens) -->
+<div class="lg:hidden flex items-center justify-between p-4 border-b border-border-dark bg-[#1c1914] sticky top-0 z-20">
+<div class="flex items-center gap-2 text-white">
+<span class="material-symbols-outlined text-primary">token</span>
+<h2 class="text-lg font-bold">The Guild Hall</h2>
+</div>
+<button class="text-white p-2">
+<span class="material-symbols-outlined">menu</span>
+</button>
+</div>
+<!-- Top Bar / Header Content -->
+<header class="w-full px-6 py-5 lg:px-12 flex flex-col sm:flex-row sm:items-center justify-between gap-6 border-b border-border-dark/50 bg-[#181511]/95 backdrop-blur-sm sticky top-0 z-10">
+<div class="flex flex-col">
+<h2 class="text-2xl font-bold text-white tracking-tight">Dashboard</h2>
+<p class="text-sm text-text-muted">Welcome back to the forge, Novice.</p>
+</div>
+<div class="flex items-center gap-6 self-end sm:self-auto">
+<!-- Streak Counter -->
+<div class="flex items-center gap-2 px-4 py-2 bg-secondary/10 border border-secondary/30 rounded-full">
+<span class="material-symbols-outlined text-blue-400 text-xl" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
+<span class="text-blue-100 text-sm font-bold">5 Day Streak</span>
+</div>
+<!-- User Profile -->
+<div class="flex items-center gap-3">
+<div class="relative group cursor-pointer">
+<div class="absolute -inset-1 bg-gradient-to-r from-yellow-600 via-primary to-yellow-600 rounded-full opacity-75 blur group-hover:opacity-100 transition duration-1000 group-hover:duration-200"></div>
+<div class="relative size-12 hex-avatar bg-gray-800 border-2 border-primary z-10 overflow-hidden">
+<img alt="Profile avatar of a determined male sculptor" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuALH76sJHTKGe7c5HsW83pJTLXrWup44fjbCCtt_sl_tmDx0yHBFPXPlBERQiods16e8GCoe9fT9fajZdcruPjgZTem1MRmAA8_ZNqHl2W05_-P-RoFnqYoQr88BCqUnf8VV3Cioh6459HJCRjJ87gCvi0RHh3TaAhD9yn1lsr52thvqhtbT6l2W2DyYxtd9-TcbbbGvASNVlrPP_USSy6pNakkW29IYD5CtH2nxQrWgtDG4kaU5jJJyLxacWv51XjRMuS0LJ2yLZs"/>
+</div>
+<!-- Level Badge -->
+<div class="absolute -bottom-1 -right-1 bg-background-dark border border-primary rounded-full size-5 flex items-center justify-center z-20">
+<span class="text-[10px] font-bold text-primary">3</span>
+</div>
+</div>
+</div>
+</div>
+</header>
+<!-- Dashboard Content -->
+<div class="flex-1 w-full max-w-5xl mx-auto p-6 lg:p-12 flex flex-col gap-10">
+<!-- XP Progress Section (Hero) -->
+<section class="flex flex-col gap-4 animate-fade-in-up">
+<div class="flex justify-between items-end">
+<div>
+<p class="text-primary font-bold tracking-wider text-xs uppercase mb-1">Current Rank</p>
+<h3 class="text-2xl font-bold text-white">Novice Sculptor</h3>
+</div>
+<p class="text-text-muted text-sm font-medium"><span class="text-white">1,250</span> / 2,000 XP</p>
+</div>
+<div class="relative h-6 w-full bg-[#322d24] rounded-full overflow-hidden shadow-inner border border-white/5">
+<!-- Progress Fill -->
+<div class="absolute top-0 left-0 h-full bg-gradient-to-r from-orange-800 via-yellow-600 to-primary glow-bar transition-all duration-1000 ease-out rounded-full" style="width: 60%;">
+<!-- Shimmer effect -->
+<div class="absolute top-0 right-0 bottom-0 left-0 bg-gradient-to-r from-transparent via-white/20 to-transparent w-full -translate-x-full animate-[shimmer_2s_infinite]"></div>
+</div>
+</div>
+<div class="flex justify-between text-xs text-text-muted">
+<span>Level 3</span>
+<span>Level 4</span>
+</div>
+</section>
+<!-- Daily Bounty Card -->
+<section class="flex flex-col gap-6">
+<div class="flex items-center justify-between">
+<h3 class="text-lg font-semibold text-white flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">assignment</span>
+                            Daily Bounty
+                        </h3>
+<span class="text-xs text-text-muted">Resets in 12h 45m</span>
+</div>
+<div class="group relative w-full overflow-hidden rounded-xl border border-[#393328] bg-card-dark shadow-2xl transition-all hover:border-primary/40 hover:shadow-[0_0_20px_rgba(245,159,10,0.1)]">
+<!-- Background Texture -->
+<div class="absolute inset-0 bg-noise opacity-20 pointer-events-none"></div>
+<div class="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-10 transition-opacity"></div>
+<div class="relative p-6 md:p-8 flex flex-col md:flex-row gap-8 items-start md:items-center">
+<!-- Icon/Visual -->
+<div class="shrink-0 relative">
+<div class="size-20 rounded-xl bg-[#1e1a14] border border-[#393328] flex items-center justify-center shadow-inner group-hover:border-primary/50 transition-colors">
+<span class="material-symbols-outlined text-4xl text-text-muted group-hover:text-primary transition-colors">humerus</span>
+</div>
+<div class="absolute -top-3 -right-3 bg-gradient-to-br from-yellow-500 to-amber-700 text-white text-xs font-bold px-2 py-1 rounded-md shadow-lg border border-yellow-400/30">
+                                    +150 XP
+                                </div>
+</div>
+<!-- Content -->
+<div class="flex-1 flex flex-col gap-2">
+<h4 class="text-2xl font-bold text-white group-hover:text-primary transition-colors">The Shapeless Form</h4>
+<p class="text-text-muted text-sm leading-relaxed max-w-xl">
+                                    Master the basics of digital clay. Sculpt a simple organic sphere deformation using only the grab and smooth brushes. Focus on maintaining topology.
+                                </p>
+<div class="flex gap-4 mt-2">
+<div class="flex items-center gap-1 text-xs text-text-muted">
+<span class="material-symbols-outlined text-[16px]">schedule</span>
+<span>~45 mins</span>
+</div>
+<div class="flex items-center gap-1 text-xs text-text-muted">
+<span class="material-symbols-outlined text-[16px]">stairs</span>
+<span>Beginner</span>
+</div>
+</div>
+</div>
+<!-- Action Button -->
+<div class="w-full md:w-auto mt-4 md:mt-0">
+<button class="w-full md:w-auto min-w-[160px] cursor-pointer relative overflow-hidden rounded-lg bg-primary hover:bg-primary-dark text-black font-bold text-sm px-6 py-3 transition-all transform active:scale-95 shadow-[0_0_15px_rgba(245,159,10,0.3)] hover:shadow-[0_0_20px_rgba(245,159,10,0.6)] flex items-center justify-center gap-2 group/btn">
+<span>Submit Work</span>
+<span class="material-symbols-outlined text-lg transition-transform group-hover/btn:translate-x-1">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Secondary Cards Grid (Extra Content for Desktop Layout) -->
+<section class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+<!-- Card 1 -->
+<div class="p-5 rounded-xl border border-border-dark bg-[#221c10] hover:bg-[#27231b] transition-colors cursor-pointer group">
+<div class="flex items-center justify-between mb-3">
+<div class="flex items-center gap-2 text-text-muted group-hover:text-white transition-colors">
+<span class="material-symbols-outlined">school</span>
+<span class="text-sm font-medium">Next Lesson</span>
+</div>
+<span class="material-symbols-outlined text-text-muted group-hover:text-primary">chevron_right</span>
+</div>
+<h5 class="text-lg font-bold text-white mb-1">Understanding Brushes</h5>
+<p class="text-xs text-text-muted">Module 2 • 3/5 Completed</p>
+<div class="mt-4 h-1 w-full bg-[#322d24] rounded-full overflow-hidden">
+<div class="h-full bg-gray-500 w-[60%]"></div>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="p-5 rounded-xl border border-border-dark bg-[#221c10] hover:bg-[#27231b] transition-colors cursor-pointer group">
+<div class="flex items-center justify-between mb-3">
+<div class="flex items-center gap-2 text-text-muted group-hover:text-white transition-colors">
+<span class="material-symbols-outlined">trophy</span>
+<span class="text-sm font-medium">Achievements</span>
+</div>
+<span class="material-symbols-outlined text-text-muted group-hover:text-primary">chevron_right</span>
+</div>
+<h5 class="text-lg font-bold text-white mb-1">Clay Master I</h5>
+<p class="text-xs text-text-muted">Sculpt 10 unique models</p>
+<div class="flex mt-3 gap-1">
+<div class="size-2 rounded-full bg-primary"></div>
+<div class="size-2 rounded-full bg-primary"></div>
+<div class="size-2 rounded-full bg-primary"></div>
+<div class="size-2 rounded-full bg-[#322d24]"></div>
+<div class="size-2 rounded-full bg-[#322d24]"></div>
+</div>
+</div>
+</section>
+</div>
+<!-- Mobile Bottom Nav (Visible only on small screens) -->
+<nav class="lg:hidden sticky bottom-0 w-full bg-[#1c1914] border-t border-border-dark flex justify-around p-2 z-30 pb-safe">
+<a class="flex flex-col items-center gap-1 p-2 text-primary" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">castle</span>
+<span class="text-[10px] font-medium">Guild</span>
+</a>
+<a class="flex flex-col items-center gap-1 p-2 text-text-muted" href="#">
+<span class="material-symbols-outlined">map</span>
+<span class="text-[10px] font-medium">Map</span>
+</a>
+<a class="flex flex-col items-center gap-1 p-2 text-text-muted" href="#">
+<span class="material-symbols-outlined">menu_book</span>
+<span class="text-[10px] font-medium">Grimoire</span>
+</a>
+</nav>
+</main>
+</div>
+<style>
+        /* Custom Keyframe for Shimmer */
+        @keyframes shimmer {
+            100% {
+                transform: translateX(100%);
+            }
+        }
+        
+        .pb-safe {
+            padding-bottom: env(safe-area-inset-bottom, 20px);
+        }
+    </style>
+</body></html>

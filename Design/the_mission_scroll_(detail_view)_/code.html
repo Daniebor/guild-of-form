@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>The Mission Scroll</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;family=Noto+Sans:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#f59f0a",
+                        "background-light": "#f8f7f5",
+                        "background-dark": "#181511", 
+                        "paper-dark": "#221c10",
+                    },
+                    fontFamily: {
+                        "display": ["Newsreader", "serif"],
+                        "sans": ["Noto Sans", "sans-serif"],
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #181511; 
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #444; 
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #f59f0a; 
+        }
+        /* Custom checkbox style */
+        .checkbox-wrapper input:checked + div {
+            background-color: #f59f0a;
+            border-color: #f59f0a;
+        }
+        .checkbox-wrapper input:checked + div span {
+            display: block;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark min-h-screen flex flex-col font-display text-[#e5e5e5] custom-scrollbar overflow-x-hidden">
+<!-- Main Layout -->
+<div class="flex-grow flex flex-col items-center w-full pb-28">
+<div class="w-full max-w-[960px] px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-8">
+<!-- Breadcrumbs -->
+<nav class="flex flex-wrap items-center gap-2 text-sm font-sans tracking-wide">
+<a class="text-[#8a8175] hover:text-primary transition-colors" href="#">Chapter 2</a>
+<span class="material-symbols-outlined text-[#8a8175] text-xs">chevron_right</span>
+<span class="text-primary font-medium">Mission 2-1</span>
+</nav>
+<!-- Page Heading -->
+<header class="flex flex-col gap-2">
+<h1 class="text-white text-5xl md:text-6xl font-medium tracking-tight leading-tight">The Shapeless Form</h1>
+<div class="flex items-center gap-2 text-[#baaf9c] font-sans text-sm tracking-widest uppercase">
+<span class="material-symbols-outlined text-base">school</span>
+<span>Class: Vertex Manipulation</span>
+</div>
+</header>
+<!-- Media Player Container (Grimoire Style) -->
+<div class="relative w-full group">
+<!-- Decorative Border Container -->
+<div class="relative rounded-lg p-1 bg-[#2a2620] border-2 border-[#3d362e] shadow-2xl">
+<!-- Gold Corner Accents -->
+<div class="absolute -top-[2px] -left-[2px] w-6 h-6 border-t-2 border-l-2 border-primary rounded-tl-lg z-10"></div>
+<div class="absolute -top-[2px] -right-[2px] w-6 h-6 border-t-2 border-r-2 border-primary rounded-tr-lg z-10"></div>
+<div class="absolute -bottom-[2px] -left-[2px] w-6 h-6 border-b-2 border-l-2 border-primary rounded-bl-lg z-10"></div>
+<div class="absolute -bottom-[2px] -right-[2px] w-6 h-6 border-b-2 border-r-2 border-primary rounded-br-lg z-10"></div>
+<!-- Video Area -->
+<div class="relative flex items-center justify-center bg-black aspect-video rounded overflow-hidden cursor-pointer group-hover:opacity-95 transition-opacity bg-cover bg-center" data-alt="Digital 3D sculpting interface showing a clay sphere mesh wireframe" style='background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url("https://lh3.googleusercontent.com/aida-public/AB6AXuCjmC6VXUieS4oU2EXFoiXjti5KRYp6-bzBLmi13cmslcA4LVUwVP4QVybMUddQov-IMK-DHVGkl2A0EzoGWCCZD7SyS1P5x3XkJrDwPSAudurpAyXG9K8ln2Mph-yuNKx1KfVTxIMaK3ws_9Wc0NGlIDK1g6LAUX3CoRdNufBGB3JGLou8kADXkTuG61M2kTAKtHWao3bOc5dNmEQ4rYCHyie9G9MsL6WS-_xlrAYL8_LjLQge0gSfveZLlMbe_Kq3DjPCqGabM-0");'>
+<button class="relative z-20 flex shrink-0 items-center justify-center rounded-full w-20 h-20 bg-primary/90 text-background-dark shadow-[0_0_30px_rgba(245,159,10,0.4)] hover:scale-105 hover:bg-primary transition-all duration-300">
+<span class="material-symbols-outlined text-4xl" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</button>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-4">
+<!-- Scroll of Wisdom (Theory) -->
+<section class="lg:col-span-2 flex flex-col gap-4">
+<div class="flex items-center gap-3 border-b border-[#3d362e] pb-3">
+<span class="material-symbols-outlined text-primary text-2xl">auto_stories</span>
+<h2 class="text-white text-2xl font-bold tracking-tight">Scroll of Wisdom</h2>
+</div>
+<div class="bg-paper-dark rounded-lg border border-[#3d362e] p-6 lg:p-8 relative overflow-hidden">
+<!-- Background texture hint -->
+<div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/dark-leather.png')] opacity-20 pointer-events-none"></div>
+<div class="relative z-10 space-y-4">
+<p class="text-[#dcd6ca] text-lg leading-relaxed font-normal">
+                                To shape the formless requires vision. Understand the digital clay before you strike. This scroll contains the ancient knowledge of vertex manipulation.
+                            </p>
+<p class="text-[#baaf9c] text-base leading-relaxed">
+                                In the realm of ZBrush, the sphere is not merely a shape, but a universe of potential. By accessing the <span class="text-primary/90 font-medium">Move Brush</span>, one channels the energy of creation to pull mountains from plains. Keep your topology uniform, for chaos in the mesh leads to chaos in the mind.
+                            </p>
+<blockquote class="border-l-4 border-primary/40 pl-4 py-1 my-4 italic text-[#8a8175]">
+                                "A sculptor does not add to the clay, they reveal the truth hidden within." — Grandmaster Z
+                            </blockquote>
+</div>
+</div>
+</section>
+<!-- The Trial (Task List) -->
+<aside class="lg:col-span-1 flex flex-col gap-4">
+<div class="flex items-center gap-3 border-b border-[#3d362e] pb-3">
+<span class="material-symbols-outlined text-primary text-2xl">swords</span>
+<h2 class="text-white text-2xl font-bold tracking-tight">The Trial</h2>
+</div>
+<div class="bg-[#1c1812] rounded-lg border-2 border-dashed border-primary/40 p-5 flex flex-col gap-4 shadow-lg shadow-black/20">
+<p class="text-sm font-sans text-[#8a8175] uppercase tracking-wider font-semibold">Objective: Deformation</p>
+<div class="flex flex-col gap-3">
+<!-- Task Item 1 -->
+<label class="checkbox-wrapper flex items-start gap-3 cursor-pointer group">
+<input class="peer sr-only" type="checkbox"/>
+<div class="w-6 h-6 rounded border border-[#5c5446] bg-[#12100d] flex items-center justify-center shrink-0 mt-0.5 group-hover:border-primary transition-colors">
+<span class="material-symbols-outlined text-black text-sm hidden font-bold">check</span>
+</div>
+<span class="text-[#dcd6ca] text-base group-hover:text-white transition-colors peer-checked:text-[#666] peer-checked:line-through decoration-primary/50">Initialize a Sphere 3D primitive</span>
+</label>
+<!-- Task Item 2 -->
+<label class="checkbox-wrapper flex items-start gap-3 cursor-pointer group">
+<input class="peer sr-only" type="checkbox"/>
+<div class="w-6 h-6 rounded border border-[#5c5446] bg-[#12100d] flex items-center justify-center shrink-0 mt-0.5 group-hover:border-primary transition-colors">
+<span class="material-symbols-outlined text-black text-sm hidden font-bold">check</span>
+</div>
+<span class="text-[#dcd6ca] text-base group-hover:text-white transition-colors peer-checked:text-[#666] peer-checked:line-through decoration-primary/50">Equip the Move Brush (B-M-V)</span>
+</label>
+<!-- Task Item 3 -->
+<label class="checkbox-wrapper flex items-start gap-3 cursor-pointer group">
+<input class="peer sr-only" type="checkbox"/>
+<div class="w-6 h-6 rounded border border-[#5c5446] bg-[#12100d] flex items-center justify-center shrink-0 mt-0.5 group-hover:border-primary transition-colors">
+<span class="material-symbols-outlined text-black text-sm hidden font-bold">check</span>
+</div>
+<span class="text-[#dcd6ca] text-base group-hover:text-white transition-colors peer-checked:text-[#666] peer-checked:line-through decoration-primary/50">Distort mesh to asymmetrical form</span>
+</label>
+<!-- Task Item 4 -->
+<label class="checkbox-wrapper flex items-start gap-3 cursor-pointer group">
+<input class="peer sr-only" type="checkbox"/>
+<div class="w-6 h-6 rounded border border-[#5c5446] bg-[#12100d] flex items-center justify-center shrink-0 mt-0.5 group-hover:border-primary transition-colors">
+<span class="material-symbols-outlined text-black text-sm hidden font-bold">check</span>
+</div>
+<span class="text-[#dcd6ca] text-base group-hover:text-white transition-colors peer-checked:text-[#666] peer-checked:line-through decoration-primary/50">Save Project as .ZPR</span>
+</label>
+</div>
+</div>
+</aside>
+</div>
+</div>
+</div>
+<!-- Sticky Footer (Action Bar) -->
+<div class="fixed bottom-0 left-0 w-full z-50">
+<!-- Gradient fade to transparency above the bar -->
+<div class="absolute bottom-full left-0 w-full h-12 bg-gradient-to-t from-background-dark to-transparent pointer-events-none"></div>
+<div class="bg-[#12100e]/95 backdrop-blur-md border-t border-[#3d362e] px-6 py-4 flex justify-center items-center shadow-[0_-5px_20px_rgba(0,0,0,0.5)]">
+<div class="w-full max-w-[960px] flex justify-between items-center gap-4">
+<div class="hidden sm:flex flex-col">
+<span class="text-[#8a8175] text-xs font-sans uppercase tracking-widest">Progress</span>
+<div class="flex items-center gap-2">
+<div class="h-1.5 w-32 bg-[#3d362e] rounded-full overflow-hidden">
+<div class="h-full w-2/3 bg-primary"></div>
+</div>
+<span class="text-white text-sm font-bold">66%</span>
+</div>
+</div>
+<button class="flex-1 sm:flex-none bg-primary hover:bg-[#ffb02e] text-[#181511] font-bold text-lg py-3 px-8 rounded-lg shadow-[0_0_20px_rgba(245,159,10,0.3)] hover:shadow-[0_0_30px_rgba(245,159,10,0.5)] transition-all flex items-center justify-center gap-2 group">
+<span>Complete Ritual</span>
+<span class="bg-black/10 px-2 py-0.5 rounded text-sm font-sans font-semibold group-hover:bg-black/20">+250 XP</span>
+<span class="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</body></html>
