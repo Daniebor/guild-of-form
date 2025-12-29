@@ -27,10 +27,10 @@ export default function MobileBottomNav() {
         <Map />
         <span className="text-[10px] font-medium">Map</span>
       </Link>
-      <Link href="#" className="flex flex-col items-center gap-1 p-2 text-text-muted">
+      {/* <Link href="#" className="flex flex-col items-center gap-1 p-2 text-text-muted">
         <BookOpen />
         <span className="text-[10px] font-medium">Grimoire</span>
-      </Link>
+      </Link> */}
     </nav>
   );
 }

@@ -40,7 +40,7 @@ export default function SideNav() {
           <Map className={pathname === '/map' ? 'text-primary' : ''} />
           <span className="text-sm">World Map</span>
         </Link>
-        <Link href="#" className="flex items-center gap-4 px-4 py-3 rounded-lg hover:bg-white/5 transition-colors text-text-muted hover:text-white">
+        {/* <Link href="#" className="flex items-center gap-4 px-4 py-3 rounded-lg hover:bg-white/5 transition-colors text-text-muted hover:text-white">
           <BookOpen />
           <span className="font-medium text-sm">Grimoire</span>
         </Link>
@@ -50,7 +50,7 @@ export default function SideNav() {
             <Users className="text-sm" />
             <span className="font-medium text-sm">Sculptors of Ash</span>
           </Link>
-        </div>
+        </div> */}
       </nav>
       <div className="p-4 border-t border-border-dark">
         <button className="flex w-full items-center gap-3 rounded-lg p-2 hover:bg-white/5 transition-colors">
