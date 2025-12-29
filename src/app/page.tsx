@@ -1,36 +1,31 @@
 'use client';
 
+import DashboardHeader from '@/components/DashboardHeader';
 import XpBar from '@/components/XpBar';
 import BountyCard from '@/components/BountyCard';
-import MapCanvas from '@/components/MapCanvas';
-import PathSelector from '@/components/PathSelector';
+import NextLessonCard from '@/components/NextLessonCard';
+import AchievementsCard from '@/components/AchievementsCard';
 import { useUserStore } from '@/store/userStore';
 import { useEffect } from 'react';
 
 export default function Home() {
-  const { checkStreak, completedBossIds, unlockedPaths } = useUserStore();
+  const checkStreak = useUserStore((state) => state.checkStreak);
 
   useEffect(() => {
     checkStreak();
   }, [checkStreak]);
 
-  const chapter5BossId = 'THE STONE GOLEM';
-  const showPathSelector = completedBossIds.includes(chapter5BossId) && unlockedPaths.length === 1 && unlockedPaths[0] === 'foundation';
-
   return (
     <>
-      {showPathSelector && <PathSelector />}
-      <div className="space-y-8">
-        <XpBar />
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="md:col-span-1">
+        <DashboardHeader />
+        <div className="flex-1 w-full max-w-5xl mx-auto p-6 lg:p-12 flex flex-col gap-10">
+            <XpBar />
             <BountyCard />
-          </div>
-          <div className="md:col-span-2">
-            <MapCanvas />
-          </div>
+            <section className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                <NextLessonCard />
+                <AchievementsCard />
+            </section>
         </div>
-      </div>
     </>
   );
 }

@@ -1,14 +1,17 @@
 import React from 'react';
-import Header from './Header';
+import SideNav from './SideNav';
+import MobileHeader from './MobileHeader';
+import MobileBottomNav from './MobileBottomNav';
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-void text-text-main">
-      <Header />
-      <main className="p-4 sm:p-6 lg:p-8">
+    <div className="flex h-screen w-full">
+      <SideNav />
+      <main className="flex-1 flex flex-col h-full relative overflow-y-auto bg-background-dark">
+        <MobileHeader />
         {children}
+        <MobileBottomNav />
       </main>
-      {/* Bottom Nav for mobile will be added here later */}
     </div>
   );
 }
