@@ -9,6 +9,22 @@ const withPWA = withPWAInit({
 const nextConfig: NextConfig = {
   /* config options here */
   reactCompiler: true,
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'placeholder.pics',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.transparenttextures.com',
+      }
+    ],
+  },
 };
 
 export default withPWA(nextConfig);

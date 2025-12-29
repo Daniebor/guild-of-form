@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Cinzel } from "next/font/google";
+import { Inter, Newsreader } from "next/font/google";
 import AppShell from "@/components/AppShell";
 import "./globals.css";
 
@@ -8,9 +8,9 @@ const inter = Inter({
   variable: "--font-inter",
 });
 
-const cinzel = Cinzel({
+const newsreader = Newsreader({
   subsets: ["latin"],
-  variable: "--font-cinzel",
+  variable: "--font-newsreader",
 });
 
 export const metadata: Metadata = {
@@ -25,8 +25,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${inter.variable} ${cinzel.variable} antialiased`}>
+    <html lang="en" className="dark">
+      <body className={`${inter.variable} ${newsreader.variable} font-sans bg-background-dark text-text-main antialiased`}>
         <AppShell>{children}</AppShell>
       </body>
     </html>
