@@ -9,7 +9,9 @@ import { MapNode } from "@/components/map/MapNode";
 import { MapConnector } from "@/components/map/MapConnector";
 import { AnvilOverlay } from "@/components/training/AnvilOverlay";
 import { MapSkeleton } from "@/components/map/MapSkeleton";
-import { NodeStatus, Drill } from "@/lib/types"; // Import Drill type
+import { NodeStatus, Drill } from "@/lib/types";
+import { supabase } from "@/lib/supabase"; // Import Supabase
+import { AuthModal } from "@/components/auth/AuthModal"; // Import AuthModal
 
 // --- Visual Polish: Floating Particles Component ---
 const Particles = () => {
@@ -49,14 +51,28 @@ export default function MapPage() {
   const { completedNodes, xp, resetProgress } = useUserStore();
   const hasScrolled = useRef(false);
 
+  // Auth State
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
   // State for the Training Ground Overlay
   const [isTrainingOpen, setIsTrainingOpen] = useState(false);
   const [selectedBossRequirement, setSelectedBossRequirement] = useState(0);
   const [selectedBossId, setSelectedBossId] = useState<string | null>(null);
-  const [selectedDrills, setSelectedDrills] = useState<Drill[]>([]); // New state for drills
+  const [selectedDrills, setSelectedDrills] = useState<Drill[]>([]); 
 
   useEffect(() => {
     setMounted(true);
+    
+    // Check Auth on Mount
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        setIsAuthenticated(true);
+      }
+      setIsCheckingAuth(false);
+    };
+    checkAuth();
   }, []);
 
   const getNodeStatus = (nodeId: string, requirements: string[] = []): NodeStatus => {
@@ -68,7 +84,8 @@ export default function MapPage() {
 
   // --- Auto-Scroll Logic ---
   useEffect(() => {
-    if (!mounted || hasScrolled.current) return;
+    // Only scroll if mounted AND authenticated
+    if (!mounted || hasScrolled.current || !isAuthenticated) return;
 
     let targetNodeId = null;
     const lastVisitedId = sessionStorage.getItem("sculptor_last_node");
@@ -104,7 +121,7 @@ export default function MapPage() {
             }
         }, 100); 
     }
-  }, [mounted, completedNodes]);
+  }, [mounted, completedNodes, isAuthenticated]); // Add isAuthenticated dependency
 
   const handleChallengeBoss = () => {
     if (!selectedBossId) return;
@@ -122,17 +139,12 @@ export default function MapPage() {
     if (type === "boss") {
       const requirement = requiredXP || 0;
       
-      // Fetch drills/data for this boss
       const nodeData = findNodeById(nodeId);
       const bossDrills = nodeData?.drills || [];
 
-      // Always set up the data
       setSelectedBossRequirement(requirement);
       setSelectedBossId(nodeId);
       setSelectedDrills(bossDrills);
-      
-      // ALWAYS open the Training Ground as a Lobby
-      // The Overlay handles whether the "Challenge" button is enabled or not.
       setIsTrainingOpen(true);
       return;
     } else {
@@ -143,12 +155,31 @@ export default function MapPage() {
     }
   };
 
-  if (!mounted) {
+  // --- LOADING / AUTH CHECK STATE ---
+  if (!mounted || isCheckingAuth) {
     return (
         <div className="min-h-screen bg-void text-white">
             <ForgeHeader />
             <MapSkeleton />
         </div>
+    );
+  }
+
+  // --- NOT AUTHENTICATED STATE ---
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-void text-white relative">
+        <ForgeHeader />
+        {/* Blurred Map Background */}
+        <div className="blur-sm pointer-events-none">
+           <MapSkeleton />
+        </div>
+        {/* Force Auth Modal */}
+        <AuthModal 
+          isOpen={true} 
+          onClose={() => router.push('/')} // Redirect to landing if closed
+        />
+      </div>
     );
   }
 

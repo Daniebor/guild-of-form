@@ -2,8 +2,11 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { UserState, UserActions } from '../types';
 import { CURRICULUM, findNodeById } from '../data/curriculum';
+import { supabase } from '../supabase';
 
-interface Store extends UserState, UserActions {}
+interface Store extends UserState, UserActions {
+  syncWithSupabase: (userId: string) => Promise<void>;
+}
 
 const INITIAL_STATE: UserState = {
   xp: 0,
@@ -13,42 +16,124 @@ const INITIAL_STATE: UserState = {
   unlockedChapters: ['chapter-1'],
 };
 
+// Helper to push state to Supabase
+const pushUpdate = async (userId: string, updates: Partial<UserState>) => {
+  if (!userId) return;
+  const { error } = await supabase
+    .from('profiles')
+    .update({
+      xp: updates.xp,
+      streak: updates.streak,
+      last_login_date: updates.lastLoginDate,
+      completed_nodes: updates.completedNodes, // Stored as JSONB
+      unlocked_chapters: updates.unlockedChapters, // Stored as JSONB
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', userId);
+  
+  if (error) console.error('Supabase Sync Error:', error);
+};
+
 export const useUserStore = create<Store>()(
   persist(
     (set, get) => ({
       ...INITIAL_STATE,
 
-      addXP: (amount) => set((state) => ({ xp: state.xp + amount })),
+      // --- SUPABASE SYNC LOGIC ---
+      syncWithSupabase: async (userId: string) => {
+        // 1. Fetch remote profile
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .single();
+
+        if (error || !profile) {
+          // If no profile (shouldn't happen due to trigger), or error, do nothing
+          console.warn("Could not fetch profile", error);
+          return;
+        }
+
+        // 2. CONFLICT RESOLUTION: 
+        // We generally trust the DB, BUT if local has significantly more progress (played offline),
+        // we might want to keep local. For MVP: Remote overwrites Local.
+        // Ideally: Merge them.
+        
+        // Simple Merge Strategy: Take the MAX XP and Union of nodes
+        const local = get();
+        
+        const mergedXP = Math.max(local.xp, profile.xp || 0);
+        const mergedNodes = Array.from(new Set([...local.completedNodes, ...(profile.completed_nodes || [])]));
+        const mergedChapters = Array.from(new Set([...local.unlockedChapters, ...(profile.unlocked_chapters || [])]));
+        
+        const newState = {
+          xp: mergedXP,
+          streak: profile.streak || local.streak, // Trust remote streak usually
+          completedNodes: mergedNodes,
+          unlockedChapters: mergedChapters,
+          lastLoginDate: profile.last_login_date || local.lastLoginDate,
+        };
+
+        // Update Local Store
+        set(newState);
+
+        // Sync back the merged result to Cloud immediately
+        pushUpdate(userId, newState);
+      },
+
+      // --- ACTIONS ---
+
+      addXP: async (amount) => {
+        set((state) => {
+          const newXP = state.xp + amount;
+          // Optimistic update
+          const session = supabase.auth.getSession().then(({ data }) => {
+             if (data.session) pushUpdate(data.session.user.id, { xp: newXP });
+          });
+          return { xp: newXP };
+        });
+      },
 
       unlockChapter: (chapterId) =>
         set((state) => {
           if (state.unlockedChapters.includes(chapterId)) return state;
-          return { unlockedChapters: [...state.unlockedChapters, chapterId] };
+          const newChapters = [...state.unlockedChapters, chapterId];
+          
+          supabase.auth.getSession().then(({ data }) => {
+             if (data.session) pushUpdate(data.session.user.id, { unlockedChapters: newChapters });
+          });
+
+          return { unlockedChapters: newChapters };
         }),
 
       completeNode: (nodeId) => {
         const state = get();
-        if (state.completedNodes.includes(nodeId)) return; // Already completed
+        if (state.completedNodes.includes(nodeId)) return;
 
         const node = findNodeById(nodeId);
         if (!node) return;
 
-        // 1. Add XP
         const newXP = state.xp + node.xpReward;
-
-        // 2. Mark as completed
         const newCompletedNodes = [...state.completedNodes, nodeId];
-
-        // 3. Check for Chapter Unlocks (Simple logic: If Boss 1 is done, unlock Chapter 2)
+        
         const newUnlockedChapters = [...state.unlockedChapters];
         if (nodeId === 'boss-1' && !newUnlockedChapters.includes('chapter-2')) {
           newUnlockedChapters.push('chapter-2');
         }
+        // (Add logic for other bosses here as needed)
 
-        set({
-          xp: newXP,
-          completedNodes: newCompletedNodes,
-          unlockedChapters: newUnlockedChapters,
+        // DB Update payload
+        const updates = {
+            xp: newXP,
+            completedNodes: newCompletedNodes,
+            unlockedChapters: newUnlockedChapters
+        };
+
+        set(updates);
+
+        // Fire and forget sync
+        supabase.auth.getSession().then(({ data }) => {
+             if (data.session) pushUpdate(data.session.user.id, updates);
         });
       },
 
@@ -57,37 +142,41 @@ export const useUserStore = create<Store>()(
         const now = new Date();
         const lastLogin = state.lastLoginDate ? new Date(state.lastLoginDate) : null;
 
-        // First login ever
+        let newStreak = state.streak;
+        let shouldUpdate = false;
+
         if (!lastLogin) {
-          set({ streak: 1, lastLoginDate: now.toISOString() });
-          return;
+          newStreak = 1;
+          shouldUpdate = true;
+        } else {
+          const diffTime = Math.abs(now.getTime() - lastLogin.getTime());
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+
+          if (diffDays === 2) { 
+            newStreak += 1;
+            shouldUpdate = true;
+          } else if (diffDays > 2) {
+            newStreak = 1; // Reset
+            shouldUpdate = true;
+          } else if (diffDays <= 1) {
+             // Only update timestamp
+             shouldUpdate = true;
+          }
         }
 
-        const diffTime = Math.abs(now.getTime() - lastLogin.getTime());
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-
-        // Same day login: do nothing
-        if (diffDays <= 1) {
-           // update time but keep streak same (or implement hourly checks later)
-           set({ lastLoginDate: now.toISOString() });
-           return;
-        }
-
-        // Consecutive day (Logged in yesterday)
-        if (diffDays === 2) { // roughly 24-48 hours window logic simplified
-          set({ streak: state.streak + 1, lastLoginDate: now.toISOString() });
-        } 
-        // Missed a day (More than 48 hours since last login)
-        else if (diffDays > 2) {
-          // Heat Decay: Reset to 1 for MVP (or decrement in future)
-          set({ streak: 1, lastLoginDate: now.toISOString() });
+        if (shouldUpdate) {
+            const newState = { streak: newStreak, lastLoginDate: now.toISOString() };
+            set(newState);
+            supabase.auth.getSession().then(({ data }) => {
+                if (data.session) pushUpdate(data.session.user.id, newState);
+            });
         }
       },
 
       resetProgress: () => set(INITIAL_STATE),
     }),
     {
-      name: 'sculptors-saga-storage', // unique name for local storage key
+      name: 'sculptors-saga-storage',
     }
   )
 );
