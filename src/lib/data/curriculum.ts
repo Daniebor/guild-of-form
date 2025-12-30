@@ -26,6 +26,7 @@ export const CURRICULUM: Chapter[] = [
           {
             title: "III. The Zoom",
             description: "Hold **Ctrl** and **Right Click Drag**. Pull down to zoom in, push up to zoom out.",
+            media: "/images/chapter1/test.gif",
           },
           {
             title: "IV. The Anchor",
