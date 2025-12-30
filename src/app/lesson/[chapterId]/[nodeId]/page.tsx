@@ -7,6 +7,7 @@ import { findNodeById } from "@/lib/data/curriculum";
 import { ForgeHeader } from "@/components/layout/ForgeHeader";
 import { RuneTablet } from "@/components/lesson/RuneTablet";
 import { HoldButton } from "@/components/lesson/HoldButton";
+import { MediaFrame } from "@/components/lesson/MediaFrame";
 import { ChevronLeft, Map as MapIcon } from "lucide-react";
 import Link from "next/link";
 
@@ -102,10 +103,8 @@ export default function LessonPage() {
                 <p>{step.description}</p>
               </div>
 
-              {/* Mock Media Placeholder */}
-              <div className="mt-6 aspect-video bg-slate-900 rounded border border-slate-800 flex items-center justify-center text-slate-600 text-sm">
-                [Visual Artifact: GIF/WebM would play here]
-              </div>
+              {/* Media Artifact */}
+              <MediaFrame src={step.media} title={step.title} />
             </div>
           ))}
         </div>
