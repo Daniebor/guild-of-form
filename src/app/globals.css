@@ -2,58 +2,25 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer utilities {
-  .custom-scrollbar::-webkit-scrollbar {
-    width: 8px;
-  }
-  .custom-scrollbar::-webkit-scrollbar-track {
-    background: #181511;
-  }
-  .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #444;
-    border-radius: 4px;
-  }
-  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #f59f0a;
+@layer base {
+  /* Set the default atmosphere to The Void */
+  body {
+    @apply bg-void text-slate-100 font-sans antialiased selection:bg-amber selection:text-void;
   }
 
-  .glass-panel {
-    background: rgba(20, 20, 20, 0.75);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-  }
-
-  .glow-bar {
-    box-shadow: 0 0 15px rgba(245, 159, 10, 0.4);
-  }
-  
-  .glow-text {
-    text-shadow: 0 0 10px rgba(245, 159, 10, 0.5);
-  }
-
-  .node-glow-active {
-    box-shadow: 0 0 0 4px rgba(245, 159, 10, 0.2), 0 0 20px rgba(245, 159, 10, 0.4);
-  }
-
-  .node-glow-completed {
-    box-shadow: 0 0 10px rgba(245, 159, 10, 0.2);
-  }
-
-  .hex-avatar {
-    clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
-  }
-  
-  .pb-safe {
-    padding-bottom: env(safe-area-inset-bottom, 20px);
+  /* All Headers use the Arcane Font (Cinzel) and Magic Color (Amber) */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-serif text-amber font-bold tracking-wide;
   }
 }
 
-/* Material Symbols Font Setup */
-.material-symbols-outlined {
-  font-variation-settings:
-  'FILL' 0,
-  'wght' 400,
-  'GRAD' 0,
-  'opsz' 24
+/* Custom scrollbar for the "Ancient Scroll" feel */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  @apply bg-void;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-700 rounded-full hover:bg-amber-dim;
 }

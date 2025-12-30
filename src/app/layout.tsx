@@ -1,27 +1,37 @@
-import type { Metadata } from 'next';
-import './globals.css';
-import { GameProvider } from '../context/GameContext';
+import type { Metadata } from "next";
+import { Inter, Cinzel } from "next/font/google";
+import "./globals.css";
+
+// 1. Configure the Body Font (Readability)
+const inter = Inter({ 
+  subsets: ["latin"], 
+  variable: "--font-inter" 
+});
+
+// 2. Configure the Header Font (Fantasy/Arcane)
+const cinzel = Cinzel({ 
+  subsets: ["latin"], 
+  variable: "--font-cinzel",
+  weight: ["400", "700", "900"] 
+});
 
 export const metadata: Metadata = {
-  title: 'The Mission Scroll - Guild of Form',
-  description: 'Learn to sculpt in ZBrush through gamified quests.',
+  title: "The Sculptor's Saga",
+  description: "Gamified ZBrush Education Platform",
 };
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode;
-}) {
+}>) {
   return (
-    <html lang="en" className="dark">
-      <head>
-        <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
-        <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&family=Noto+Sans:wght@400;500;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-      </head>
-      <body className="bg-background-dark text-white">
-        <GameProvider>
+    <html lang="en">
+      <body className={`${inter.variable} ${cinzel.variable} bg-void text-white`}>
+        {/* We will add the <ForgeHeader /> here later */}
+        <main className="min-h-screen">
           {children}
-        </GameProvider>
+        </main>
       </body>
     </html>
   );
