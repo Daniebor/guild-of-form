@@ -38,43 +38,43 @@ export default function MapPage() {
 
     let targetNodeId = null;
     const lastVisitedId = sessionStorage.getItem("sculptor_last_node");
-    
-    if (lastVisitedId) {
-        targetNodeId = lastVisitedId;
-        sessionStorage.removeItem("sculptor_last_node");
-    } else {
-        const allNodes = CURRICULUM.flatMap(c => c.nodes);
-        const activeNode = allNodes.find(n => {
-           const status = getNodeStatus(n.id, n.requires);
-           return status === 'active';
-        });
 
-        if (activeNode) {
-          targetNodeId = activeNode.id;
-        } else {
-            targetNodeId = "node-1-1"; 
-        }
+    if (lastVisitedId) {
+      targetNodeId = lastVisitedId;
+      sessionStorage.removeItem("sculptor_last_node");
+    } else {
+      const allNodes = CURRICULUM.flatMap(c => c.nodes);
+      const activeNode = allNodes.find(n => {
+        const status = getNodeStatus(n.id, n.requires);
+        return status === 'active';
+      });
+
+      if (activeNode) {
+        targetNodeId = activeNode.id;
+      } else {
+        targetNodeId = "node-1-1";
+      }
     }
 
     if (targetNodeId) {
-        setTimeout(() => {
-            const element = document.getElementById(`node-${targetNodeId}`);
-            if (element) {
-                const hasSeenIntro = sessionStorage.getItem("has_seen_map_intro");
-                const behavior = hasSeenIntro ? "auto" : "smooth";
-                element.scrollIntoView({ behavior, block: "center" });
-                hasScrolled.current = true;
-                if (!hasSeenIntro) {
-                    sessionStorage.setItem("has_seen_map_intro", "true");
-                }
-            }
-        }, 100); 
+      setTimeout(() => {
+        const element = document.getElementById(`node-${targetNodeId}`);
+        if (element) {
+          const hasSeenIntro = sessionStorage.getItem("has_seen_map_intro");
+          const behavior = hasSeenIntro ? "auto" : "smooth";
+          element.scrollIntoView({ behavior, block: "center" });
+          hasScrolled.current = true;
+          if (!hasSeenIntro) {
+            sessionStorage.setItem("has_seen_map_intro", "true");
+          }
+        }
+      }, 100);
     }
   }, [mounted, completedNodes]);
 
   const handleChallengeBoss = () => {
     if (!selectedBossId) return;
-    
+
     // Find chapter for the selected boss to build correct URL
     const chapter = CURRICULUM.find(c => c.nodes.some(n => n.id === selectedBossId));
     if (chapter) {
@@ -89,23 +89,23 @@ export default function MapPage() {
 
     if (type === "boss") {
       const requirement = requiredXP || 0;
-      
+
       if (xp < requirement) {
         setSelectedBossRequirement(requirement);
         setSelectedBossId(nodeId); // Track which boss triggered the training
         setIsTrainingOpen(true);
         return;
       }
-      
+
       // Direct access if already strong enough
       const chapter = CURRICULUM.find(c => c.nodes.some(n => n.id === nodeId));
       if (chapter) {
-         router.push(`/lesson/${chapter.id}/${nodeId}`);
+        router.push(`/lesson/${chapter.id}/${nodeId}`);
       }
     } else {
       const chapter = CURRICULUM.find(c => c.nodes.some(n => n.id === nodeId));
       if (chapter) {
-         router.push(`/lesson/${chapter.id}/${nodeId}`);
+        router.push(`/lesson/${chapter.id}/${nodeId}`);
       }
     }
   };
@@ -145,9 +145,9 @@ export default function MapPage() {
 
         {CURRICULUM.map((chapter) => (
           <div key={chapter.id}>
-            <div 
-               className="absolute text-slate-700 font-serif font-bold text-4xl opacity-20 select-none pointer-events-none whitespace-nowrap"
-               style={{ top: `${chapter.nodes[0].position.y - 5}%`, left: '10%' }}
+            <div
+              className="absolute text-slate-700 font-serif font-bold text-4xl opacity-20 select-none pointer-events-none whitespace-nowrap"
+              style={{ top: `${chapter.nodes[0].position.y - 5}%`, left: '10%' }}
             >
               {chapter.title}
             </div>
@@ -171,27 +171,29 @@ export default function MapPage() {
         ))}
       </main>
 
-      <AnvilOverlay 
-        isOpen={isTrainingOpen} 
+      <AnvilOverlay
+        isOpen={isTrainingOpen}
         onClose={() => setIsTrainingOpen(false)}
         currentXP={xp}
         requiredXP={selectedBossRequirement}
         onChallenge={handleChallengeBoss} // Pass the challenge handler
       />
 
-      <div className="fixed bottom-4 right-4 z-40 opacity-50 hover:opacity-100 transition-opacity">
-        <button
-          onClick={() => {
-            if (confirm("⚠️ RESET ALL PROGRESS? This cannot be undone.")) {
-              resetProgress();
-              window.location.reload();
-            }
-          }}
-          className="text-xs font-mono text-red-500 bg-slate-900/80 border border-red-900/50 px-3 py-2 rounded hover:bg-red-900/20 hover:text-red-400"
-        >
-          [DEV: RESET DATA]
-        </button>
-      </div>
+      {process.env.NODE_ENV === 'development' && (
+        <div className="fixed bottom-4 right-4 z-40 opacity-50 hover:opacity-100 transition-opacity">
+          <button
+            onClick={() => {
+              if (confirm("⚠️ RESET ALL PROGRESS?")) {
+                resetProgress();
+                window.location.reload();
+              }
+            }}
+            className="text-xs font-mono text-red-500 bg-slate-900/80 border border-red-900/50 px-3 py-2 rounded hover:bg-red-900/20"
+          >
+            [DEV: RESET DATA]
+          </button>
+        </div>
+      )}
     </div>
   );
 }
