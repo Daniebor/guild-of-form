@@ -9,39 +9,33 @@ import { MapNode } from "@/components/map/MapNode";
 import { MapConnector } from "@/components/map/MapConnector";
 import { AnvilOverlay } from "@/components/training/AnvilOverlay";
 import { MapSkeleton } from "@/components/map/MapSkeleton";
-import { NodeStatus } from "@/lib/types";
+import { NodeStatus, Drill } from "@/lib/types"; // Import Drill type
 
 // --- Visual Polish: Floating Particles Component ---
 const Particles = () => {
   const [mounted, setMounted] = useState(false);
-  
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
+  useEffect(() => { setMounted(true); }, []);
   if (!mounted) return null;
-
   return (
     <div className="fixed inset-0 pointer-events-none z-1 overflow-hidden">
       {[...Array(25)].map((_, i) => (
         <div
           key={i}
-          // Increased opacity and brightness (amber-400) for visibility
           className="absolute bg-amber-400 w-1.5 h-1.5 rounded-full blur-[1px]"
           style={{
             left: `${Math.random() * 100}%`,
             top: `${Math.random() * 100}%`,
             animation: `float ${15 + Math.random() * 20}s linear infinite`,
             animationDelay: `-${Math.random() * 20}s`,
-            opacity: 0, // Initial state handled by keyframes
+            opacity: 0,
           }}
         />
       ))}
       <style jsx>{`
         @keyframes float {
           0% { transform: translateY(100vh) scale(0.5); opacity: 0; }
-          20% { opacity: 0.6; } /* Fade in quickly */
-          80% { opacity: 0.6; } /* Stay visible */
+          20% { opacity: 0.6; }
+          80% { opacity: 0.6; }
           100% { transform: translateY(-20vh) scale(1.5); opacity: 0; }
         }
       `}</style>
@@ -59,6 +53,7 @@ export default function MapPage() {
   const [isTrainingOpen, setIsTrainingOpen] = useState(false);
   const [selectedBossRequirement, setSelectedBossRequirement] = useState(0);
   const [selectedBossId, setSelectedBossId] = useState<string | null>(null);
+  const [selectedDrills, setSelectedDrills] = useState<Drill[]>([]); // New state for drills
 
   useEffect(() => {
     setMounted(true);
@@ -128,8 +123,13 @@ export default function MapPage() {
       const requirement = requiredXP || 0;
       
       if (xp < requirement) {
+        // Fetch drills for this boss
+        const nodeData = findNodeById(nodeId);
+        const bossDrills = nodeData?.drills || [];
+
         setSelectedBossRequirement(requirement);
         setSelectedBossId(nodeId);
+        setSelectedDrills(bossDrills); // Set the drills
         setIsTrainingOpen(true);
         return;
       }
@@ -146,7 +146,6 @@ export default function MapPage() {
     }
   };
 
-  // --- SKELETON STATE ---
   if (!mounted) {
     return (
         <div className="min-h-screen bg-void text-white">
@@ -159,19 +158,13 @@ export default function MapPage() {
   return (
     <div className="min-h-screen bg-void text-white overflow-x-hidden relative">
       <ForgeHeader />
-      
-      {/* --- ATMOSPHERE LAYERS (Full Width) --- */}
-      
-      {/* 1. Global Noise Overlay (Fixed to screen) */}
-      <div className="fixed inset-0 pointer-events-none bg-[url('/noise.png')] opacity-5 z-0" />
-
-      {/* 2. The Ascension Gradient (Absolute - Scrolls with map container but fixed to full width) */}
-      <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-void via-slate-900/30 to-blue-900/40 z-0 h-[250vh] w-full" />
-
-      {/* Visual Polish: Ambient Particles (Moved AFTER background layers, z-index 1) */}
       <Particles />
 
-      {/* --- MAP CONTENT (Constrained Width, z-index 10) --- */}
+      {/* --- ATMOSPHERE LAYERS --- */}
+      <div className="fixed inset-0 pointer-events-none bg-[url('/noise.png')] opacity-5 z-0" />
+      <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-void via-slate-900/30 to-blue-900/40 z-0 h-[250vh] w-full" />
+
+      {/* --- MAP CONTENT --- */}
       <main className="relative w-full max-w-3xl mx-auto min-h-[250vh] mt-10 mb-20 z-10">
         
         <svg className="absolute inset-0 w-full h-full pointer-events-none z-0">
@@ -199,12 +192,10 @@ export default function MapPage() {
 
         {CURRICULUM.map((chapter) => (
           <div key={chapter.id}>
-            {/* Improved Chapter Title: Centered Watermark */}
             <div 
                className="absolute left-1/2 -translate-x-1/2 text-slate-600 font-serif font-black text-6xl md:text-8xl opacity-20 select-none pointer-events-none whitespace-nowrap z-0 tracking-tighter"
                style={{ top: `${chapter.nodes[0].position.y}%`, transform: 'translate(-50%, -50%)' }}
             >
-              {/* Display Roman Numeral or Chapter Name faintly */}
               {chapter.title.split(':')[0]} 
             </div>
 
@@ -233,6 +224,7 @@ export default function MapPage() {
         currentXP={xp}
         requiredXP={selectedBossRequirement}
         onChallenge={handleChallengeBoss}
+        drills={selectedDrills} // Pass the dynamic drills
       />
 
       {process.env.NODE_ENV === 'development' && (

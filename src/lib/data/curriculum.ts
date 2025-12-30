@@ -5,6 +5,7 @@ export const CURRICULUM: Chapter[] = [
     id: "chapter-1",
     title: "Chapter I: The Awakening",
     nodes: [
+      // ... nodes 1-1 to 1-3 remain the same ...
       {
         id: "node-1-1",
         title: "The Eye",
@@ -80,6 +81,36 @@ export const CURRICULUM: Chapter[] = [
             { title: "Task 1", description: "Load the DemoSoldier from the Lightbox." },
             { title: "Task 2", description: "Frame a perfect Portrait shot." },
             { title: "Task 3", description: "Zoom in on the boots details." }
+        ],
+        drills: [
+          { 
+            id: "drill-1-1", 
+            title: "Drill: Navigation Maze", 
+            xp: 25, 
+            duration: "2m",
+            description: "Muscle memory for navigation is key. Do this until you don't think about which key to press.",
+            steps: [
+              "Zoom in until the model fills the screen.",
+              "Rotate 180 degrees exactly.",
+              "Pan to the top right corner.",
+              "Snap view to Front using Shift."
+            ],
+            media: "/images/drills/nav_drill.gif"
+          },
+          { 
+            id: "drill-1-2", 
+            title: "Study: The Planes", 
+            xp: 50, 
+            duration: "5m",
+            description: "Practice snapping views.",
+            steps: [
+              "Rotate freely.",
+              "Snap Front.",
+              "Rotate freely.",
+              "Snap Side.",
+              "Repeat 20 times."
+            ]
+          }
         ]
       },
     ],
@@ -162,10 +193,52 @@ export const CURRICULUM: Chapter[] = [
           { title: "Task 1", description: "Use **Move** to pull the base flat and the head round." },
           { title: "Task 2", description: "Use **Clay Buildup** to add a heavy brow and nose." },
           { title: "Task 3", description: "Use **DamStandard** to cut a deep scar or symbol." }
+        ],
+        drills: [
+          { 
+            id: "drill-2-1", 
+            title: "Speed Sculpt: Organic Sphere", 
+            xp: 50, 
+            duration: "5m",
+            description: "Train your ability to break primary forms quickly. Do not use symmetry.",
+            steps: [
+              "Start with a Dynamesh Sphere (Res 64).",
+              "Use the Move Brush to pull out a chin and jaw.",
+              "Use Clay Buildup to add eye sockets.",
+              "Stop exactly at 5 minutes."
+            ],
+            media: "/images/drills/speed_sphere.gif"
+          },
+          { 
+            id: "drill-2-2", 
+            title: "Study: The Planes of the Face", 
+            xp: 100, 
+            duration: "15m",
+            description: "Understand the hard transitions of the face. Use the TrimDynamic brush.",
+            steps: [
+              "Load the 'DemoHead' tool.",
+              "Use TrimDynamic to flatten the cheeks and forehead.",
+              "Try to reduce the face to only 10 distinct planes."
+            ],
+            media: "/images/drills/planes_face.gif"
+          },
+          { 
+            id: "drill-2-3", 
+            title: "Drill: The Fake Cube", 
+            xp: 50, 
+            duration: "10m",
+            description: "Force a sphere into a cube using only subtraction.",
+            steps: [
+              "Start with a sphere.",
+              "Use hPolish (B H) to flatten the sides.",
+              "Try to make sharp 90 degree edges."
+            ]
+          }
         ]
       },
     ],
   },
+  // ... Chapters 3, 4, 5 remain the same ...
   {
     id: "chapter-3",
     title: "Chapter III: Primordial Clay",
@@ -186,21 +259,6 @@ export const CURRICULUM: Chapter[] = [
         ]
       },
       {
-        id: "node-3-2",
-        title: "The Forge",
-        type: "lesson",
-        description: "Dynamesh: Alchemy for geometry.",
-        position: { x: 50, y: 47 },
-        xpReward: 100,
-        requires: ["node-3-1"],
-        hotkeys: ["Ctrl+Drag"],
-        steps: [
-          { title: "I. Activation", description: "Enable Dynamesh in the Geometry palette. Start with Resolution 128." },
-          { title: "II. The Gesture", description: "Hold **Ctrl** and **Drag** on the empty background (The Void). This triggers the re-mesh." },
-          { title: "III. The Repair", description: "Watch the stretched rectangles turn back into even squares. Now you can sculpt again." }
-        ]
-      },
-      {
         id: "node-3-3",
         title: "The Flow",
         type: "lesson",
@@ -213,6 +271,21 @@ export const CURRICULUM: Chapter[] = [
           { title: "I. The Torch", description: "Press **\\** (Backslash) to toggle Sculptris Pro mode. Triangles are added under your brush." },
           { title: "II. SnakeHook", description: "Select **SnakeHook** (B S H). Pull a tendril out of the mesh." },
           { title: "III. Relativity", description: "The density depends on brush size. Zoom in for details, Zoom out for big shapes." }
+        ]
+      },
+      {
+        id: "node-3-2",
+        title: "The Forge",
+        type: "lesson",
+        description: "Dynamesh: Alchemy for geometry.",
+        position: { x: 50, y: 47 },
+        xpReward: 100,
+        requires: ["node-3-1"],
+        hotkeys: ["Ctrl+Drag"],
+        steps: [
+          { title: "I. Activation", description: "Enable Dynamesh in the Geometry palette. Start with Resolution 128." },
+          { title: "II. The Gesture", description: "Hold **Ctrl** and **Drag** on the empty background (The Void). This triggers the re-mesh." },
+          { title: "III. The Repair", description: "Watch the stretched rectangles turn back into even squares. Now you can sculpt again." }
         ]
       },
       {

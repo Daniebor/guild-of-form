@@ -3,8 +3,18 @@ export type NodeStatus = 'locked' | 'active' | 'completed';
 
 export interface LessonStep {
   title: string;
-  description: string; // Supports simple text/markdown
-  media?: string; // Path to GIF/Video placeholder
+  description: string;
+  media?: string;
+}
+
+export interface Drill {
+  id: number | string;
+  title: string;
+  xp: number;
+  duration: string;
+  description: string;
+  steps: string[];
+  media?: string;
 }
 
 export interface CurriculumNode {
@@ -12,14 +22,13 @@ export interface CurriculumNode {
   title: string;
   type: NodeType;
   description: string;
-  position: { x: number; y: number }; // Percentage (0-100) for relative positioning on map
+  position: { x: number; y: number };
   xpReward: number;
-  requiredXP?: number; // EXP needed to unlock node (boss nodes)
-  requires?: string[]; // IDs of nodes that must be finished first
-  
-  // New Content Fields for Lesson View
+  requiredXP?: number;
+  requires?: string[];
   hotkeys?: string[]; 
   steps?: LessonStep[];
+  drills?: Drill[];
 }
 
 export interface Chapter {
@@ -31,16 +40,15 @@ export interface Chapter {
 export interface UserState {
   xp: number;
   streak: number;
-  lastLoginDate: string | null; // ISO Date String
-  completedNodes: string[]; // Array of Node IDs
-  unlockedChapters: string[]; // Array of Chapter IDs
+  lastLoginDate: string | null;
+  completedNodes: string[];
+  unlockedChapters: string[];
 }
 
-// Action types for the store
 export interface UserActions {
   completeNode: (nodeId: string) => void;
   checkStreak: () => void;
   addXP: (amount: number) => void;
   unlockChapter: (chapterId: string) => void;
-  resetProgress: () => void; // Helpful for debugging
+  resetProgress: () => void;
 }
