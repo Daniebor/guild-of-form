@@ -14,11 +14,12 @@ export default function MapPage() {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const { completedNodes, xp, resetProgress } = useUserStore();
-  const hasScrolled = useRef(false); // Ref to prevent double scrolling
+  const hasScrolled = useRef(false);
 
   // State for the Training Ground Overlay
   const [isTrainingOpen, setIsTrainingOpen] = useState(false);
   const [selectedBossRequirement, setSelectedBossRequirement] = useState(0);
+  const [selectedBossId, setSelectedBossId] = useState<string | null>(null); // New state to track target
 
   useEffect(() => {
     setMounted(true);
@@ -35,37 +36,34 @@ export default function MapPage() {
   useEffect(() => {
     if (!mounted || hasScrolled.current) return;
 
-    // 1. Find the target node ID (First Active node)
     let targetNodeId = null;
-    const allNodes = CURRICULUM.flatMap(c => c.nodes);
-
-    const activeNode = allNodes.find(n => {
-       const status = getNodeStatus(n.id, n.requires);
-       return status === 'active';
-    });
-
-    if (activeNode) {
-      targetNodeId = activeNode.id;
+    const lastVisitedId = sessionStorage.getItem("sculptor_last_node");
+    
+    if (lastVisitedId) {
+        targetNodeId = lastVisitedId;
+        sessionStorage.removeItem("sculptor_last_node");
     } else {
-        // Fallback: If nothing active (e.g. all done, or start), default to 1-1
-        targetNodeId = "node-1-1"; 
+        const allNodes = CURRICULUM.flatMap(c => c.nodes);
+        const activeNode = allNodes.find(n => {
+           const status = getNodeStatus(n.id, n.requires);
+           return status === 'active';
+        });
+
+        if (activeNode) {
+          targetNodeId = activeNode.id;
+        } else {
+            targetNodeId = "node-1-1"; 
+        }
     }
 
-    // 2. Scroll to it with a slight delay to ensure rendering
     if (targetNodeId) {
         setTimeout(() => {
             const element = document.getElementById(`node-${targetNodeId}`);
             if (element) {
-                // Check if this is the first visit in this session
                 const hasSeenIntro = sessionStorage.getItem("has_seen_map_intro");
-                
-                // If first time: Smooth scroll (Nice effect)
-                // If returning: Auto/Instant scroll (Efficiency)
                 const behavior = hasSeenIntro ? "auto" : "smooth";
-
                 element.scrollIntoView({ behavior, block: "center" });
                 hasScrolled.current = true;
-
                 if (!hasSeenIntro) {
                     sessionStorage.setItem("has_seen_map_intro", "true");
                 }
@@ -74,20 +72,36 @@ export default function MapPage() {
     }
   }, [mounted, completedNodes]);
 
+  const handleChallengeBoss = () => {
+    if (!selectedBossId) return;
+    
+    // Find chapter for the selected boss to build correct URL
+    const chapter = CURRICULUM.find(c => c.nodes.some(n => n.id === selectedBossId));
+    if (chapter) {
+      router.push(`/lesson/${chapter.id}/${selectedBossId}`);
+    }
+  };
 
   const handleNodeClick = (nodeId: string, type: string, status: NodeStatus, requiredXP?: number) => {
     if (status === "locked") return;
+
+    sessionStorage.setItem("sculptor_last_node", nodeId);
 
     if (type === "boss") {
       const requirement = requiredXP || 0;
       
       if (xp < requirement) {
         setSelectedBossRequirement(requirement);
+        setSelectedBossId(nodeId); // Track which boss triggered the training
         setIsTrainingOpen(true);
         return;
       }
       
-      router.push(`/lesson/chapter-1/${nodeId}`);
+      // Direct access if already strong enough
+      const chapter = CURRICULUM.find(c => c.nodes.some(n => n.id === nodeId));
+      if (chapter) {
+         router.push(`/lesson/${chapter.id}/${nodeId}`);
+      }
     } else {
       const chapter = CURRICULUM.find(c => c.nodes.some(n => n.id === nodeId));
       if (chapter) {
@@ -162,6 +176,7 @@ export default function MapPage() {
         onClose={() => setIsTrainingOpen(false)}
         currentXP={xp}
         requiredXP={selectedBossRequirement}
+        onChallenge={handleChallengeBoss} // Pass the challenge handler
       />
 
       <div className="fixed bottom-4 right-4 z-40 opacity-50 hover:opacity-100 transition-opacity">

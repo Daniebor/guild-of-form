@@ -7,8 +7,7 @@ import { findNodeById } from "@/lib/data/curriculum";
 import { ForgeHeader } from "@/components/layout/ForgeHeader";
 import { RuneTablet } from "@/components/lesson/RuneTablet";
 import { HoldButton } from "@/components/lesson/HoldButton";
-import { Button } from "@/components/ui/Button";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Map as MapIcon } from "lucide-react";
 import Link from "next/link";
 
 export default function LessonPage() {
@@ -53,10 +52,19 @@ export default function LessonPage() {
       {/* 1. Rune Tablet (Sticky) */}
       <RuneTablet hotkeys={node.hotkeys || []} />
 
+      {/* Floating Map Return Button (Fixed Bottom Right) */}
+      <Link 
+        href="/map"
+        className="fixed bottom-8 right-8 z-50 flex items-center justify-center w-14 h-14 bg-slate-900 border-2 border-amber-500/30 rounded-full text-amber-500 shadow-[0_0_20px_rgba(0,0,0,0.5)] hover:scale-110 hover:border-amber-500 hover:shadow-[0_0_30px_rgba(245,158,11,0.4)] transition-all duration-300 group"
+        title="Return to Map"
+      >
+        <MapIcon size={24} />
+      </Link>
+
       {/* 2. Main Content Container */}
       <main className="max-w-2xl mx-auto px-6 pt-12">
         
-        {/* Navigation Back */}
+        {/* Navigation Back (Top Link) */}
         <Link href="/map" className="inline-flex items-center text-slate-500 hover:text-amber mb-8 transition-colors">
           <ChevronLeft size={16} className="mr-1" /> Return to Map
         </Link>
@@ -91,7 +99,6 @@ export default function LessonPage() {
               </h2>
               
               <div className="prose prose-invert prose-lg text-slate-300">
-                {/* We render simple description. In future, we can parse Markdown */}
                 <p>{step.description}</p>
               </div>
 

@@ -10,15 +10,15 @@ interface AnvilOverlayProps {
   onClose: () => void;
   requiredXP: number;
   currentXP: number;
+  onChallenge?: () => void; // New prop for navigation
 }
 
-export const AnvilOverlay = ({ isOpen, onClose, requiredXP, currentXP }: AnvilOverlayProps) => {
+export const AnvilOverlay = ({ isOpen, onClose, requiredXP, currentXP, onChallenge }: AnvilOverlayProps) => {
   const { addXP } = useUserStore();
   
   const deficit = Math.max(0, requiredXP - currentXP);
   const progress = Math.min(100, (currentXP / requiredXP) * 100);
 
-  // Mock Drills for the MVP
   const drills = [
     { id: 1, title: "Speed Sculpt: Sphere", xp: 50, duration: "5m" },
     { id: 2, title: "Study: Facial Planes", xp: 100, duration: "15m" },
@@ -27,15 +27,12 @@ export const AnvilOverlay = ({ isOpen, onClose, requiredXP, currentXP }: AnvilOv
 
   const handleDrill = (xpAmount: number) => {
     addXP(xpAmount);
-    // In a real app, this would start a timer or open a specific drill page.
-    // For MVP, we simulate instant completion to test the unlock logic.
   };
 
   return (
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -44,7 +41,6 @@ export const AnvilOverlay = ({ isOpen, onClose, requiredXP, currentXP }: AnvilOv
             className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50"
           />
 
-          {/* Drawer */}
           <motion.div
             initial={{ y: "100%" }}
             animate={{ y: "0%" }}
@@ -52,7 +48,6 @@ export const AnvilOverlay = ({ isOpen, onClose, requiredXP, currentXP }: AnvilOv
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
             className="fixed bottom-0 left-0 right-0 z-50 bg-slate-900 border-t-2 border-amber-900/50 shadow-[0_-10px_40px_rgba(0,0,0,0.8)] h-[60vh] md:h-[50vh] flex flex-col"
           >
-            {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800">
               <div className="flex items-center gap-3">
                 <Hammer className="text-amber-600" size={24} />
@@ -63,11 +58,9 @@ export const AnvilOverlay = ({ isOpen, onClose, requiredXP, currentXP }: AnvilOv
               </button>
             </div>
 
-            {/* Content */}
             <div className="p-6 overflow-y-auto flex-1">
               <div className="max-w-2xl mx-auto space-y-8">
                 
-                {/* Status Bar */}
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm uppercase tracking-widest">
                     <span className="text-slate-400">Current Strength</span>
@@ -88,7 +81,6 @@ export const AnvilOverlay = ({ isOpen, onClose, requiredXP, currentXP }: AnvilOv
                   </p>
                 </div>
 
-                {/* Drills Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {drills.map((drill) => (
                     <button
@@ -110,13 +102,20 @@ export const AnvilOverlay = ({ isOpen, onClose, requiredXP, currentXP }: AnvilOv
                   ))}
                 </div>
 
-                {/* Victory State */}
                 {deficit <= 0 && (
                   <div className="text-center animate-in fade-in zoom-in duration-300">
                     <p className="text-amber-400 font-serif mb-4 text-lg">
                       "Your hands are steady. The gate is open."
                     </p>
-                    <Button onClick={onClose} variant="primary" size="lg" className="w-full">
+                    <Button 
+                        onClick={() => {
+                            if (onChallenge) onChallenge();
+                            else onClose();
+                        }} 
+                        variant="primary" 
+                        size="lg" 
+                        className="w-full"
+                    >
                       Challenge the Boss
                     </Button>
                   </div>
