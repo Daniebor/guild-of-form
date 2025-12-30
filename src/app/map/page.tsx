@@ -10,8 +10,8 @@ import { MapConnector } from "@/components/map/MapConnector";
 import { AnvilOverlay } from "@/components/training/AnvilOverlay";
 import { MapSkeleton } from "@/components/map/MapSkeleton";
 import { NodeStatus, Drill } from "@/lib/types";
-import { supabase } from "@/lib/supabase"; // Import Supabase
-import { AuthModal } from "@/components/auth/AuthModal"; // Import AuthModal
+import { supabase } from "@/lib/supabase"; 
+import { AuthModal } from "@/components/auth/AuthModal";
 
 // --- Visual Polish: Floating Particles Component ---
 const Particles = () => {
@@ -67,6 +67,7 @@ export default function MapPage() {
     // Check Auth on Mount
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
+      
       if (session) {
         setIsAuthenticated(true);
       }
@@ -74,6 +75,29 @@ export default function MapPage() {
     };
     checkAuth();
   }, []);
+
+  // --- STATE INTEGRITY CHECK (Fixes Stale Data Issue) ---
+  // If a user has completed nodes but not enough XP (e.g. from a previous dev session),
+  // it means the state is corrupt. We reset it to ensure the map renders correctly.
+  // Node 1-1 gives 50 XP. If XP < 50, you cannot have completed any nodes.
+  useEffect(() => {
+    if (isAuthenticated && !isCheckingAuth) {
+      if (completedNodes.length > 0 && xp < 50) {
+        console.log("State Integrity Check Failed: Resetting Progress");
+        resetProgress();
+        // Note: The 'NEW USER REDIRECT' below will catch the resulting 0 XP 
+        // and send them to Welcome to start fresh.
+      }
+    }
+  }, [isAuthenticated, isCheckingAuth, completedNodes, xp, resetProgress]);
+
+  // --- NEW USER REDIRECT ---
+  // If user is logged in but has 0 XP, they haven't done onboarding.
+  useEffect(() => {
+    if (isAuthenticated && !isCheckingAuth && xp === 0) {
+      router.replace("/welcome");
+    }
+  }, [isAuthenticated, isCheckingAuth, xp, router]);
 
   const getNodeStatus = (nodeId: string, requirements: string[] = []): NodeStatus => {
     if (completedNodes.includes(nodeId)) return "completed";
@@ -121,7 +145,7 @@ export default function MapPage() {
             }
         }, 100); 
     }
-  }, [mounted, completedNodes, isAuthenticated]); // Add isAuthenticated dependency
+  }, [mounted, completedNodes, isAuthenticated]);
 
   const handleChallengeBoss = () => {
     if (!selectedBossId) return;
@@ -177,7 +201,7 @@ export default function MapPage() {
         {/* Force Auth Modal */}
         <AuthModal 
           isOpen={true} 
-          onClose={() => router.push('/')} // Redirect to landing if closed
+          onClose={() => router.push('/')} 
         />
       </div>
     );

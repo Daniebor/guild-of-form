@@ -54,7 +54,7 @@ export const ForgeHeader = () => {
     <>
       <header className="sticky top-0 z-50 w-full bg-void/90 backdrop-blur-md border-b border-slate-800 shadow-md">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <Link href="/map" className="flex items-center gap-2 group">
+          <Link href="/" className="flex items-center gap-2 group">
              <span className="font-serif font-bold text-lg md:text-xl text-slate-100 group-hover:text-amber transition-colors tracking-widest">
                THE SCULPTOR'S SAGA
              </span>
