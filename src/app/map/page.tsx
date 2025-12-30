@@ -122,22 +122,19 @@ export default function MapPage() {
     if (type === "boss") {
       const requirement = requiredXP || 0;
       
-      if (xp < requirement) {
-        // Fetch drills for this boss
-        const nodeData = findNodeById(nodeId);
-        const bossDrills = nodeData?.drills || [];
+      // Fetch drills/data for this boss
+      const nodeData = findNodeById(nodeId);
+      const bossDrills = nodeData?.drills || [];
 
-        setSelectedBossRequirement(requirement);
-        setSelectedBossId(nodeId);
-        setSelectedDrills(bossDrills); // Set the drills
-        setIsTrainingOpen(true);
-        return;
-      }
+      // Always set up the data
+      setSelectedBossRequirement(requirement);
+      setSelectedBossId(nodeId);
+      setSelectedDrills(bossDrills);
       
-      const chapter = CURRICULUM.find(c => c.nodes.some(n => n.id === nodeId));
-      if (chapter) {
-         router.push(`/lesson/${chapter.id}/${nodeId}`);
-      }
+      // ALWAYS open the Training Ground as a Lobby
+      // The Overlay handles whether the "Challenge" button is enabled or not.
+      setIsTrainingOpen(true);
+      return;
     } else {
       const chapter = CURRICULUM.find(c => c.nodes.some(n => n.id === nodeId));
       if (chapter) {
@@ -224,7 +221,7 @@ export default function MapPage() {
         currentXP={xp}
         requiredXP={selectedBossRequirement}
         onChallenge={handleChallengeBoss}
-        drills={selectedDrills} // Pass the dynamic drills
+        drills={selectedDrills}
       />
 
       {process.env.NODE_ENV === 'development' && (

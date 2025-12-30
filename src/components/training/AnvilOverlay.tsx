@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Hammer, X, ChevronLeft, Clock, Award } from "lucide-react";
+import { Hammer, X, ChevronLeft, Clock, Award, Flame } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { useUserStore } from "@/lib/store/userStore";
 import { MediaFrame } from "@/components/lesson/MediaFrame";
-import { Drill } from "@/lib/types"; // Import types
+import { Drill } from "@/lib/types"; // Import Drill type
 
 interface AnvilOverlayProps {
   isOpen: boolean;
@@ -14,11 +14,11 @@ interface AnvilOverlayProps {
   requiredXP: number;
   currentXP: number;
   onChallenge?: () => void;
-  drills: Drill[]; // <--- ACCEPT DRILLS FROM PROPS
+  drills: Drill[];
 }
 
 export const AnvilOverlay = ({ isOpen, onClose, requiredXP, currentXP, onChallenge, drills }: AnvilOverlayProps) => {
-  const { addXP } = useUserStore();
+  const { addXP, checkStreak } = useUserStore(); // Get checkStreak
   const [selectedDrill, setSelectedDrill] = useState<Drill | null>(null);
   
   const deficit = Math.max(0, requiredXP - currentXP);
@@ -27,6 +27,7 @@ export const AnvilOverlay = ({ isOpen, onClose, requiredXP, currentXP, onChallen
   const handleCompleteDrill = () => {
     if (selectedDrill) {
       addXP(selectedDrill.xp);
+      checkStreak(); // Update/Maintain streak on drill completion
       setSelectedDrill(null); // Go back to list
     }
   };
@@ -108,61 +109,71 @@ export const AnvilOverlay = ({ isOpen, onClose, requiredXP, currentXP, onChallen
                     </div>
 
                     {/* Victory State */}
-                    {deficit <= 0 ? (
-                      <div className="text-center animate-in fade-in zoom-in duration-300 py-10">
-                        <div className="mb-6 inline-flex p-4 rounded-full bg-amber-500/10 border border-amber-500/50 text-amber-500">
-                          <Award size={48} />
+                    {deficit <= 0 && (
+                      <div className="text-center animate-in fade-in zoom-in duration-300 py-6 border-b border-slate-800 mb-6 bg-amber-900/10 rounded-lg border border-amber-500/20">
+                        <div className="mb-4 inline-flex p-3 rounded-full bg-amber-500/10 border border-amber-500/50 text-amber-500">
+                          <Award size={32} />
                         </div>
-                        <p className="text-amber-400 font-serif mb-6 text-lg">
+                        <p className="text-amber-400 font-serif mb-4 text-lg">
                           "Your hands are steady. The gate is open."
                         </p>
-                        <Button 
-                            onClick={() => {
-                                if (onChallenge) onChallenge();
-                                else onClose();
-                            }} 
-                            variant="primary" 
-                            size="lg" 
-                            className="w-full"
-                        >
-                          Challenge the Boss
-                        </Button>
-                      </div>
-                    ) : (
-                      /* Drills Grid */
-                      <div className="grid grid-cols-1 gap-4">
-                        {drills.length > 0 ? (
-                          drills.map((drill) => (
-                            <button
-                              key={drill.id}
-                              onClick={() => setSelectedDrill(drill)}
-                              className="group flex flex-col items-start p-4 bg-slate-800/50 border border-slate-700 hover:border-amber-500/50 hover:bg-slate-800 transition-all rounded text-left relative overflow-hidden"
+                        <div className="px-6">
+                            <Button 
+                                onClick={() => {
+                                    if (onChallenge) onChallenge();
+                                    else onClose();
+                                }} 
+                                variant="primary" 
+                                size="lg" 
+                                className="w-full shadow-lg shadow-amber-500/20"
                             >
-                              <div className="flex justify-between w-full mb-2 relative z-10">
-                                <span className="font-serif text-lg text-slate-200 group-hover:text-amber-400 transition-colors">
-                                  {drill.title}
-                                </span>
-                                <span className="text-xs font-mono text-slate-500 border border-slate-600 px-2 py-1 rounded flex items-center gap-1">
-                                  <Clock size={12} /> {drill.duration}
-                                </span>
-                              </div>
-                              <p className="text-sm text-slate-400 line-clamp-2 relative z-10">
-                                {drill.description}
-                              </p>
-                              <div className="mt-3 text-xs font-mono text-amber-600/80 group-hover:text-amber-500 relative z-10">
-                                REWARD: +{drill.xp} XP
-                              </div>
-                              {/* Hover Glow */}
-                              <div className="absolute inset-0 bg-gradient-to-r from-amber-500/0 via-amber-500/5 to-amber-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-                            </button>
-                          ))
-                        ) : (
-                          <div className="text-center p-8 text-slate-500 border border-dashed border-slate-700 rounded">
-                            No drills available for this challenge yet.
-                          </div>
-                        )}
+                            Challenge the Boss
+                            </Button>
+                        </div>
+                        <p className="text-xs text-slate-500 mt-4 italic">
+                            You may proceed, or continue training below to maintain your streak.
+                        </p>
                       </div>
                     )}
+
+                    {/* Drills Grid - Always visible now */}
+                    <div className="grid grid-cols-1 gap-4 pb-10">
+                      {drills.length > 0 ? (
+                        drills.map((drill) => (
+                          <button
+                            key={drill.id}
+                            onClick={() => setSelectedDrill(drill)}
+                            className="group flex flex-col items-start p-4 bg-slate-800/50 border border-slate-700 hover:border-amber-500/50 hover:bg-slate-800 transition-all rounded text-left relative overflow-hidden"
+                          >
+                            <div className="flex justify-between w-full mb-2 relative z-10">
+                              <span className="font-serif text-lg text-slate-200 group-hover:text-amber-400 transition-colors">
+                                {drill.title}
+                              </span>
+                              <span className="text-xs font-mono text-slate-500 border border-slate-600 px-2 py-1 rounded flex items-center gap-1">
+                                <Clock size={12} /> {drill.duration}
+                              </span>
+                            </div>
+                            <p className="text-sm text-slate-400 line-clamp-2 relative z-10">
+                              {drill.description}
+                            </p>
+                            <div className="mt-3 flex items-center gap-4 text-xs font-mono relative z-10">
+                                <span className="text-amber-600/80 group-hover:text-amber-500">
+                                    REWARD: +{drill.xp} XP
+                                </span>
+                                <span className="flex items-center gap-1 text-slate-500 group-hover:text-amber-500/70">
+                                    <Flame size={12} /> Streak Active
+                                </span>
+                            </div>
+                            {/* Hover Glow */}
+                            <div className="absolute inset-0 bg-gradient-to-r from-amber-500/0 via-amber-500/5 to-amber-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+                          </button>
+                        ))
+                      ) : (
+                        <div className="text-center p-8 text-slate-500 border border-dashed border-slate-700 rounded">
+                          No drills available for this challenge yet.
+                        </div>
+                      )}
+                    </div>
                   </>
                 )}
 
@@ -176,7 +187,10 @@ export const AnvilOverlay = ({ isOpen, onClose, requiredXP, currentXP, onChallen
                     <div className="p-6 bg-slate-800/30 border border-slate-700 rounded-lg space-y-4">
                       <div className="flex items-center justify-between text-sm text-slate-400 font-mono">
                         <span className="flex items-center gap-2"><Clock size={16}/> {selectedDrill.duration}</span>
-                        <span className="text-amber-500">+ {selectedDrill.xp} XP</span>
+                        <div className="flex gap-4">
+                            <span className="text-amber-500">+ {selectedDrill.xp} XP</span>
+                            <span className="text-slate-500 flex items-center gap-1"><Flame size={14} /> Streak</span>
+                        </div>
                       </div>
                       
                       <p className="text-lg text-slate-200 leading-relaxed">
