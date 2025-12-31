@@ -14,14 +14,12 @@ import Link from "next/link";
 // Helper to render **Bold** text
 const FormattedText = ({ text }: { text: string }) => {
   if (!text) return null;
-  // Split by **...** pattern
   const parts = text.split(/(\*\*.*?\*\*)/g);
   
   return (
     <>
       {parts.map((part, index) => {
         if (part.startsWith('**') && part.endsWith('**')) {
-          // Remove asterisks and wrap in strong tag
           return (
             <strong key={index} className="text-amber-400 font-bold">
               {part.slice(2, -2)}
@@ -127,12 +125,13 @@ export default function LessonPage() {
         <div className="mt-20 pt-10 border-t border-slate-800">
           <div className="max-w-md mx-auto text-center space-y-6">
             <p className="text-slate-500 font-serif italic">
-              "Have you performed the ritual?"
+              "Is the Trial complete?"
             </p>
             
             <HoldButton 
                 onSuccess={handleComplete} 
                 completed={isCompleted}
+                label="Hold to Complete"
             />
           </div>
         </div>

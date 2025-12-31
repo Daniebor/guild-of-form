@@ -26,7 +26,6 @@ export default function ProfilePage() {
     getUser();
   }, []);
 
-  // Simple Rank Calculation
   const getRank = (xp: number) => {
     if (xp >= 5000) return { title: "Grand Architect", color: "text-blueFlame" };
     if (xp >= 2500) return { title: "Master Sculptor", color: "text-amber-400" };
@@ -39,7 +38,7 @@ export default function ProfilePage() {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    window.location.href = "/"; // Hard reload to clear state
+    window.location.href = "/"; 
   };
 
   const handleHardReset = async () => {
@@ -47,10 +46,7 @@ export default function ProfilePage() {
     const input = prompt(`This will wipe ALL progress from the Cloud. Type "${confirmText}" to confirm.`);
     
     if (input === confirmText) {
-      // 1. Reset Local Store
       resetProgress();
-      
-      // 2. Reset Supabase (if logged in)
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         await supabase.from('profiles').update({
@@ -60,7 +56,6 @@ export default function ProfilePage() {
           unlocked_chapters: ['chapter-1']
         }).eq('id', user.id);
       }
-
       window.location.reload();
     }
   };
@@ -73,7 +68,6 @@ export default function ProfilePage() {
 
       <main className="max-w-2xl mx-auto px-6 pt-12 space-y-12">
         
-        {/* Navigation */}
         <Link href="/map" className="inline-flex items-center text-slate-500 hover:text-amber-500 transition-colors">
           <ChevronLeft size={16} className="mr-1" /> Return to Map
         </Link>
@@ -106,7 +100,7 @@ export default function ProfilePage() {
           <div className="bg-slate-900/50 border border-slate-700 rounded-lg p-4 flex flex-col items-center gap-2">
             <Award className="text-blue-500" size={24} />
             <span className="text-2xl font-bold text-white">{completedNodes.length}</span>
-            <span className="text-[10px] uppercase tracking-widest text-slate-500">Rituals Done</span>
+            <span className="text-[10px] uppercase tracking-widest text-slate-500">Trials Passed</span>
           </div>
         </div>
 

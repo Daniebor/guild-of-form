@@ -40,7 +40,7 @@ export const HoldButton = ({ onSuccess, label = "Hold to Complete", completed = 
   if (completed) {
     return (
       <div className="w-full h-14 rounded bg-amber text-void font-bold font-serif tracking-widest flex items-center justify-center uppercase shadow-[0_0_20px_rgba(245,158,11,0.4)]">
-        Ritual Complete
+        Trial Complete
       </div>
     );
   }
