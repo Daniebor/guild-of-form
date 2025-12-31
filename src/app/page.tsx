@@ -3,7 +3,7 @@ import { Map, Flame, Swords, ChevronDown, Scroll } from "lucide-react";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-void text-slate-200 overflow-x-hidden selection:bg-amber-900 selection:text-white">
+    <div className="min-h-screen bg-void text-slate-200 selection:bg-amber-900 selection:text-white">
       
       {/* --- HERO SECTION --- */}
       <section className="relative flex flex-col items-center justify-center min-h-screen text-center px-6">

@@ -6,25 +6,69 @@ import { useUserStore } from "@/lib/store/userStore";
 import { supabase } from "@/lib/supabase";
 import { ForgeHeader } from "@/components/layout/ForgeHeader";
 import { Button } from "@/components/ui/Button";
-import { User, LogOut, Trash2, Shield, Flame, Star, ChevronLeft, Award } from "lucide-react";
+import { User, LogOut, Trash2, Flame, Star, ChevronLeft, Award, Edit2, X, Check } from "lucide-react";
 import Link from "next/link";
 
 export default function ProfilePage() {
   const router = useRouter();
   const { xp, streak, completedNodes, resetProgress } = useUserStore();
   const [email, setEmail] = useState<string | null>(null);
+  const [username, setUsername] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  
+  // Editing State
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValue, setEditValue] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    const getUser = async () => {
+    const fetchProfile = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         setEmail(user.email || "Architect");
+        
+        // Fetch custom username from profiles table
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('username')
+          .eq('id', user.id)
+          .single();
+          
+        if (profile?.username) {
+          setUsername(profile.username);
+          setEditValue(profile.username);
+        } else {
+          // Default fallback
+          const defaultName = user.email?.split('@')[0] || "Architect";
+          setEditValue(defaultName);
+        }
       }
       setLoading(false);
     };
-    getUser();
+    fetchProfile();
   }, []);
+
+  const handleSaveUsername = async () => {
+    if (!editValue.trim()) return;
+    setIsSaving(true);
+
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (user) {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ username: editValue.trim() })
+        .eq('id', user.id);
+
+      if (!error) {
+        setUsername(editValue.trim());
+        setIsEditing(false);
+      } else {
+        alert("Failed to update username. It might be taken.");
+      }
+    }
+    setIsSaving(false);
+  };
 
   const getRank = (xp: number) => {
     if (xp >= 5000) return { title: "Grand Architect", color: "text-blueFlame" };
@@ -78,7 +122,43 @@ export default function ProfilePage() {
             <User size={48} />
           </div>
           <div>
-            <h1 className="text-3xl font-serif font-bold text-white tracking-wide">{email?.split('@')[0]}</h1>
+            {isEditing ? (
+              <div className="flex items-center justify-center gap-2 mt-1">
+                <input 
+                  value={editValue}
+                  onChange={(e) => setEditValue(e.target.value)}
+                  className="bg-slate-900 border border-amber-500/50 rounded px-3 py-1 text-center font-serif font-bold text-xl text-white outline-none w-48 focus:ring-2 focus:ring-amber-500/20"
+                  autoFocus
+                />
+                <button 
+                  onClick={handleSaveUsername} 
+                  disabled={isSaving}
+                  className="p-1 rounded bg-amber-600 text-void hover:bg-amber-500 disabled:opacity-50"
+                >
+                  <Check size={18} />
+                </button>
+                <button 
+                  onClick={() => setIsEditing(false)}
+                  className="p-1 rounded bg-slate-800 text-slate-400 hover:text-white"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+            ) : (
+              <div className="group relative flex items-center justify-center gap-3">
+                <h1 className="text-3xl font-serif font-bold text-white tracking-wide">
+                  {username || email?.split('@')[0]}
+                </h1>
+                <button 
+                  onClick={() => setIsEditing(true)}
+                  className="text-slate-600 hover:text-amber-500 transition-colors opacity-0 group-hover:opacity-100"
+                  title="Edit Username"
+                >
+                  <Edit2 size={16} />
+                </button>
+              </div>
+            )}
+            
             <p className={`text-sm font-mono uppercase tracking-widest mt-2 ${rank.color}`}>
               {rank.title}
             </p>

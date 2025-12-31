@@ -208,7 +208,7 @@ export default function MapPage() {
   }
 
   return (
-    <div className="min-h-screen bg-void text-white overflow-x-hidden relative">
+    <div className="min-h-screen bg-void text-white relative">
       <ForgeHeader />
       <Particles />
 

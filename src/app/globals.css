@@ -5,7 +5,7 @@
 @layer base {
   /* Set the default atmosphere to The Void */
   body {
-    @apply bg-void text-slate-100 font-sans antialiased selection:bg-amber selection:text-void;
+    @apply bg-void text-slate-100 font-sans antialiased selection:bg-amber selection:text-void overflow-x-hidden;
   }
 
   /* All Headers use the Arcane Font (Cinzel) and Magic Color (Amber) */

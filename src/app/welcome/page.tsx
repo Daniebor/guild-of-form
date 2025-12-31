@@ -28,7 +28,7 @@ export default function WelcomePage() {
     {
       id: "map",
       title: "The Ascension",
-      text: "The path is vertical. You start in the Abyss. Complete rituals (lessons) to climb towards the Aether. The Gatekeepers will test your strength.",
+      text: "The path is vertical. You start in the Abyss. Complete trials (lessons) to climb towards the Aether. The Gatekeepers will test your strength.",
       icon: <Map size={80} strokeWidth={1} />,
     },
   ];
