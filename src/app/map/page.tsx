@@ -278,22 +278,6 @@ export default function MapPage() {
         onChallenge={handleChallengeBoss}
         drills={selectedDrills}
       />
-
-      {process.env.NODE_ENV === 'development' && (
-        <div className="fixed bottom-4 right-4 z-40 opacity-50 hover:opacity-100 transition-opacity">
-            <button
-            onClick={() => {
-                if (confirm("⚠️ RESET ALL PROGRESS? This cannot be undone.")) {
-                resetProgress();
-                window.location.reload();
-                }
-            }}
-            className="text-xs font-mono text-red-500 bg-slate-900/80 border border-red-900/50 px-3 py-2 rounded hover:bg-red-900/20 hover:text-red-400"
-            >
-            [DEV: RESET DATA]
-            </button>
-        </div>
-      )}
     </div>
   );
 }
