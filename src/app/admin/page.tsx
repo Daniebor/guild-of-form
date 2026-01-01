@@ -6,7 +6,7 @@ import { ForgeHeader } from "@/components/layout/ForgeHeader";
 import { Button } from "@/components/ui/Button";
 import { 
   Save, RefreshCw, Eye, Code, Smartphone, Upload, Loader2, Copy, 
-  Plus, Trash2, ArrowUp, ArrowDown, Layers, List, Hammer, FilePlus, X 
+  Plus, Trash2, ArrowUp, ArrowDown, Layers, List, Hammer, FilePlus
 } from "lucide-react";
 import { RuneTablet } from "@/components/lesson/RuneTablet";
 import { MediaFrame } from "@/components/lesson/MediaFrame";
@@ -37,6 +37,8 @@ export default function AdminCMS() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  
+  // View Modes
   const [previewMode, setPreviewMode] = useState<'mobile' | 'desktop'>('desktop');
   const [activeTab, setActiveTab] = useState<'core' | 'steps' | 'drills'>('core');
 
@@ -49,12 +51,13 @@ export default function AdminCMS() {
   const [formData, setFormData] = useState<any>({
     type: "lesson",
     description: "",
-    position: { x: 50, y: 50 },
+    position: { x: 500, y: 500 },
     xpReward: 50,
     requiredXP: 0,
     hotkeys: [],
     steps: [],
-    drills: []
+    drills: [],
+    requires: []
   });
 
   // Upload State
@@ -93,36 +96,38 @@ export default function AdminCMS() {
     setFormData({
       type: node.data.type || "lesson",
       description: node.data.description || "",
-      position: node.data.position || { x: 50, y: 50 },
+      position: node.data.position || { x: 500, y: 500 },
       xpReward: node.data.xpReward || 50,
       requiredXP: node.data.requiredXP || 0,
       hotkeys: node.data.hotkeys || [],
       steps: node.data.steps || [],
-      drills: node.data.drills || []
+      drills: node.data.drills || [],
+      requires: node.data.requires || []
     });
     setUploadedUrl(null);
   };
 
   const handleCreateNew = () => {
-    setSelectedNodeId('new'); // Special flag for new mode
-    setEditId(""); // Clear ID so user can type it
+    setSelectedNodeId('new'); 
+    setEditId(""); 
     setEditTitle("New Lesson");
     setEditChapter("chapter-1");
     setFormData({
       type: "lesson",
       description: "",
-      position: { x: 50, y: 50 },
+      position: { x: 500, y: 500 },
       xpReward: 50,
       requiredXP: 0,
       hotkeys: [],
       steps: [],
-      drills: []
+      drills: [],
+      requires: []
     });
     setUploadedUrl(null);
   };
 
   const handleDelete = async (id: string, event: React.MouseEvent) => {
-    event.stopPropagation(); // Prevent selection when clicking delete
+    event.stopPropagation();
     if (!confirm(`Are you sure you want to delete node "${id}"? This cannot be undone.`)) return;
 
     try {
@@ -132,13 +137,8 @@ export default function AdminCMS() {
         .eq('id', id);
 
       if (error) throw error;
-      
-      // If deleted node was selected, clear selection
-      if (selectedNodeId === id) {
-        setSelectedNodeId(null);
-      }
-      
-      await fetchNodes(); // Refresh list
+      if (selectedNodeId === id) setSelectedNodeId(null);
+      await fetchNodes();
     } catch (e: any) {
       alert("Error deleting node: " + e.message);
     }
@@ -165,7 +165,6 @@ export default function AdminCMS() {
       if (error) throw error;
       alert("Saved to Cloud!");
       await fetchNodes(); 
-      // Select the newly created/updated node
       const { data } = await supabase.from('curriculum_nodes').select('*').eq('id', editId).single();
       if(data) handleSelect(data);
 
@@ -199,7 +198,8 @@ export default function AdminCMS() {
   const updateListItem = (listName: string, index: number, field: string, value: any) => {
     setFormData((prev: any) => {
       const newList = [...(prev[listName] || [])];
-      if (listName === 'hotkeys') {
+      // Handles simple arrays for Hotkeys AND Requirements
+      if (listName === 'hotkeys' || listName === 'requires') {
         newList[index] = value;
       } else {
         newList[index] = { ...newList[index], [field]: value };
@@ -303,17 +303,16 @@ export default function AdminCMS() {
         
         {/* LEFT: Node List */}
         <div className="col-span-2 border-r border-slate-800 bg-slate-950 flex flex-col h-full">
-          <div className="p-4 border-b border-slate-800 bg-void flex justify-between items-center">
-            <h2 className="text-sm font-serif text-amber-500 uppercase tracking-widest">Nodes</h2>
-            <div className="flex gap-2">
-              <button onClick={handleCreateNew} className="text-amber-500 hover:text-white" title="Create New Node">
-                <FilePlus size={18} />
-              </button>
-              <button onClick={fetchNodes} className="text-slate-400 hover:text-white" title="Refresh">
-                <RefreshCw size={18} />
-              </button>
+          <div className="p-4 border-b border-slate-800 bg-void flex flex-col gap-4">
+            <div className="flex justify-between items-center">
+              <h2 className="text-sm font-serif text-amber-500 uppercase tracking-widest">Nodes</h2>
+              <div className="flex gap-2">
+                <button onClick={handleCreateNew} className="text-amber-500 hover:text-white" title="Create New Node"><FilePlus size={18} /></button>
+                <button onClick={fetchNodes} className="text-slate-400 hover:text-white" title="Refresh"><RefreshCw size={18} /></button>
+              </div>
             </div>
           </div>
+
           <div className="overflow-y-auto flex-1">
             {nodes.map((node) => (
               <div
@@ -338,7 +337,7 @@ export default function AdminCMS() {
           </div>
         </div>
 
-        {/* MIDDLE: Visual Editor */}
+        {/* MIDDLE: Visual Form */}
         <div className="col-span-4 border-r border-slate-800 bg-void flex flex-col h-full">
           <div className="p-4 border-b border-slate-800 bg-void flex justify-between items-center">
             <div className="flex gap-2">
@@ -423,19 +422,40 @@ export default function AdminCMS() {
 
                     {formData.type === 'boss' && (
                       <div>
-                        <label className="text-[10px] uppercase text-slate-500 block mb-1">Required XP (Gatekeeper)</label>
+                        <label className="text-[10px] uppercase text-slate-500 block mb-1">Required XP</label>
                         <input type="number" value={formData.requiredXP} onChange={e => updateField('requiredXP', Number(e.target.value))} className="w-full bg-slate-900 border border-slate-700 p-2 rounded text-slate-300 text-sm" />
                       </div>
                     )}
 
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="text-[10px] uppercase text-slate-500 block mb-1">Map X (%)</label>
+                        <label className="text-[10px] uppercase text-slate-500 block mb-1">Map X (px)</label>
                         <input type="number" value={formData.position?.x} onChange={e => updatePosition('x', Number(e.target.value))} className="w-full bg-slate-900 border border-slate-700 p-2 rounded text-slate-300 text-sm" />
                       </div>
                       <div>
-                        <label className="text-[10px] uppercase text-slate-500 block mb-1">Map Y (%)</label>
+                        <label className="text-[10px] uppercase text-slate-500 block mb-1">Map Y (px)</label>
                         <input type="number" value={formData.position?.y} onChange={e => updatePosition('y', Number(e.target.value))} className="w-full bg-slate-900 border border-slate-700 p-2 rounded text-slate-300 text-sm" />
+                      </div>
+                    </div>
+
+                    {/* --- REQUIREMENTS (Unlock Conditions) --- */}
+                    <div>
+                      <div className="flex justify-between mb-2">
+                        <label className="text-[10px] uppercase text-slate-500 block">Requirements (Node IDs)</label>
+                        <button onClick={() => addListItem('requires', '')} className="text-xs text-amber-500 hover:text-white flex gap-1"><Plus size={12}/> Add</button>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {(formData.requires || []).map((req: string, idx: number) => (
+                          <div key={idx} className="flex items-center gap-1 bg-slate-800 rounded px-2 py-1">
+                            <input 
+                              value={req} 
+                              onChange={e => updateListItem('requires', idx, '', e.target.value)}
+                              className="bg-transparent w-24 text-xs text-center text-mono outline-none text-amber-200"
+                              placeholder="node-id"
+                            />
+                            <button onClick={() => removeListItem('requires', idx)} className="text-slate-500 hover:text-red-400"><Trash2 size={10}/></button>
+                          </div>
+                        ))}
                       </div>
                     </div>
 
@@ -511,50 +531,48 @@ export default function AdminCMS() {
 
                     {formData.drills?.map((drill: any, idx: number) => (
                       <div key={idx} className="bg-slate-900/50 border border-slate-700 p-4 rounded-lg relative">
-                         <button onClick={() => removeListItem('drills', idx)} className="absolute right-2 top-2 p-1 text-slate-500 hover:text-red-400"><Trash2 size={14}/></button>
-                         
-                         <div className="space-y-3">
-                           <input 
-                             value={drill.title} 
-                             onChange={e => updateListItem('drills', idx, 'title', e.target.value)}
-                             className="w-full bg-transparent font-serif text-amber-100 border-b border-slate-700 focus:border-amber-500 outline-none" 
-                             placeholder="Drill Title"
-                           />
-                           <div className="grid grid-cols-2 gap-2">
-                             <input type="number" value={drill.xp} onChange={e => updateListItem('drills', idx, 'xp', Number(e.target.value))} className="bg-slate-950 p-2 rounded text-xs text-slate-300" placeholder="XP" />
-                             <input value={drill.duration} onChange={e => updateListItem('drills', idx, 'duration', e.target.value)} className="bg-slate-950 p-2 rounded text-xs text-slate-300" placeholder="Duration" />
-                           </div>
-                           <textarea value={drill.description} onChange={e => updateListItem('drills', idx, 'description', e.target.value)} className="w-full bg-slate-950 p-2 rounded text-xs text-slate-300 h-16" placeholder="Drill description..." />
-                           
-                           {/* Media Input for Drill */}
-                           <div>
+                        <button onClick={() => removeListItem('drills', idx)} className="absolute right-2 top-2 p-1 text-slate-500 hover:text-red-400"><Trash2 size={14}/></button>
+                        
+                        <div className="space-y-3">
+                          <input 
+                            value={drill.title} 
+                            onChange={e => updateListItem('drills', idx, 'title', e.target.value)}
+                            className="w-full bg-transparent font-serif text-amber-100 border-b border-slate-700 focus:border-amber-500 outline-none" 
+                            placeholder="Drill Title"
+                          />
+                          <div className="grid grid-cols-2 gap-2">
+                            <input type="number" value={drill.xp} onChange={e => updateListItem('drills', idx, 'xp', Number(e.target.value))} className="bg-slate-950 p-2 rounded text-xs text-slate-300" placeholder="XP" />
+                            <input value={drill.duration} onChange={e => updateListItem('drills', idx, 'duration', e.target.value)} className="bg-slate-950 p-2 rounded text-xs text-slate-300" placeholder="Duration" />
+                          </div>
+                          <textarea value={drill.description} onChange={e => updateListItem('drills', idx, 'description', e.target.value)} className="w-full bg-slate-950 p-2 rounded text-xs text-slate-300 h-16" placeholder="Drill description..." />
+                          
+                          <div>
                             <input 
                               value={drill.media || ''} 
                               onChange={e => updateListItem('drills', idx, 'media', e.target.value)}
                               className="w-full bg-slate-950/30 border border-slate-800 p-2 rounded text-[10px] font-mono text-slate-400 focus:text-white focus:border-amber-500 outline-none"
-                              placeholder="/images/drill_example.gif or https://..."
+                              placeholder="/images/drill_example.gif"
                             />
                           </div>
 
-                           {/* Nested Steps for Drill */}
-                           <div className="space-y-2 pt-2 border-t border-slate-800">
-                             <div className="flex justify-between items-center">
-                               <label className="text-[10px] uppercase text-slate-500">Drill Steps</label>
-                               <button onClick={() => addDrillStep(idx)} className="text-[10px] text-amber-500 flex gap-1 items-center hover:text-white"><Plus size={10}/> Add</button>
-                             </div>
-                             {(drill.steps || []).map((step: string, sIdx: number) => (
-                               <div key={sIdx} className="flex gap-2 items-center">
-                                 <span className="text-slate-600 text-[10px] w-4">{sIdx + 1}.</span>
-                                 <input 
-                                   value={step} 
-                                   onChange={e => updateDrillStep(idx, sIdx, e.target.value)}
-                                   className="flex-1 bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs text-slate-300 focus:border-amber-500 outline-none"
-                                 />
-                                 <button onClick={() => removeDrillStep(idx, sIdx)} className="text-slate-600 hover:text-red-400"><X size={12}/></button>
-                               </div>
-                             ))}
-                           </div>
-                         </div>
+                          <div className="space-y-2 pt-2 border-t border-slate-800">
+                            <div className="flex justify-between items-center">
+                              <label className="text-[10px] uppercase text-slate-500">Drill Steps</label>
+                              <button onClick={() => addDrillStep(idx)} className="text-[10px] text-amber-500 flex gap-1 items-center hover:text-white"><Plus size={10}/> Add</button>
+                            </div>
+                            {(drill.steps || []).map((step: string, sIdx: number) => (
+                              <div key={sIdx} className="flex gap-2 items-center">
+                                <span className="text-slate-600 text-[10px] w-4">{sIdx + 1}.</span>
+                                <input 
+                                  value={step} 
+                                  onChange={e => updateDrillStep(idx, sIdx, e.target.value)}
+                                  className="flex-1 bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs text-slate-300 focus:border-amber-500 outline-none"
+                                />
+                                <button onClick={() => removeDrillStep(idx, sIdx)} className="text-slate-600 hover:text-red-400"><X size={12}/></button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
                       </div>
                     ))}
                   </div>
