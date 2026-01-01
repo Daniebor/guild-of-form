@@ -1,29 +1,67 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useUserStore } from "@/lib/store/userStore";
-import { CURRICULUM, findNodeById } from "@/lib/data/curriculum";
+// Removed static import: import { CURRICULUM, findNodeById } from "@/lib/data/curriculum";
 import { ForgeHeader } from "@/components/layout/ForgeHeader";
 import { MapNode } from "@/components/map/MapNode";
 import { MapConnector } from "@/components/map/MapConnector";
 import { AnvilOverlay } from "@/components/training/AnvilOverlay";
 import { MapSkeleton } from "@/components/map/MapSkeleton";
-import { NodeStatus, Drill } from "@/lib/types";
+import { NodeStatus, Drill, Chapter, CurriculumNode } from "@/lib/types";
 import { supabase } from "@/lib/supabase"; 
 import { AuthModal } from "@/components/auth/AuthModal";
 
-// --- Visual Polish: Floating Particles Component ---
-const Particles = () => {
+// --- THEME LOGIC: Get colors based on streak ---
+const useForgeTheme = (streak: number) => {
+  return useMemo(() => {
+    // Star-Heart: Blinding Cyan/White (Mastery)
+    if (streak > 59) return { 
+      name: 'Star-Heart', 
+      particle: 'bg-cyan-200 shadow-[0_0_15px_rgba(165,243,252,0.8)]', 
+      glow: 'from-slate-950 via-blue-700/40 to-cyan-400/30' 
+    };
+    // Sun-Forged: White-Hot Gold (Month Streak)
+    if (streak > 29) return {
+      name: 'Sun-Forged',
+      particle: 'bg-yellow-100 shadow-[0_0_15px_rgba(253,224,71,0.8)]',
+      glow: 'from-slate-950 via-yellow-600/40 to-amber-200/20'
+    };
+    // Inferno: Bright Gold (High Streak)
+    if (streak > 14) return { 
+      name: 'Inferno',    
+      particle: 'bg-amber-300', 
+      glow: 'from-void via-amber-900/40 to-amber-500/20' 
+    };
+    // Kindled: Deep Orange (Started)
+    if (streak > 2)  return { 
+      name: 'Kindled',    
+      particle: 'bg-amber-600', 
+      glow: 'from-void via-amber-950/40 to-amber-900/10' 
+    };
+    // Cold Iron: Grey/Slate (Default)
+    return { 
+      name: 'Cold Iron',  
+      particle: 'bg-slate-700', 
+      glow: 'from-void via-slate-900/50 to-slate-800/10' 
+    };
+  }, [streak]);
+};
+
+// --- VISUAL POLISH: Dynamic Particles ---
+const Particles = ({ colorClass }: { colorClass: string }) => {
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
+  
   if (!mounted) return null;
+  
   return (
-    <div className="fixed inset-0 pointer-events-none z-1 overflow-hidden">
+    <div className="fixed inset-0 pointer-events-none z-1 overflow-hidden transition-colors duration-1000">
       {[...Array(25)].map((_, i) => (
         <div
           key={i}
-          className="absolute bg-amber-400 w-1.5 h-1.5 rounded-full blur-[1px]"
+          className={`absolute w-1.5 h-1.5 rounded-full blur-[1px] transition-colors duration-1000 ${colorClass}`}
           style={{
             left: `${Math.random() * 100}%`,
             top: `${Math.random() * 100}%`,
@@ -45,11 +83,26 @@ const Particles = () => {
   );
 };
 
+// Fallback titles if chapters are dynamically ID'd
+const CHAPTER_TITLES: Record<string, string> = {
+  "chapter-1": "Chapter I: The Awakening",
+  "chapter-2": "Chapter II: The First Tools",
+  "chapter-3": "Chapter III: Primordial Clay",
+  "chapter-4": "Chapter IV: The Binding",
+  "chapter-5": "Chapter V: Golem's Assembly",
+};
+
 export default function MapPage() {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
-  const { completedNodes, xp, resetProgress } = useUserStore();
+  const { completedNodes, xp, streak, resetProgress } = useUserStore();
   const hasScrolled = useRef(false);
+
+  // Dynamic Data State
+  const [curriculum, setCurriculum] = useState<Chapter[]>([]);
+  const [loadingData, setLoadingData] = useState(true);
+
+  const theme = useForgeTheme(streak);
 
   // Auth State
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
@@ -63,36 +116,88 @@ export default function MapPage() {
 
   useEffect(() => {
     setMounted(true);
-    
-    // Check Auth on Mount
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session) {
-        setIsAuthenticated(true);
-      }
+      if (session) setIsAuthenticated(true);
       setIsCheckingAuth(false);
     };
     checkAuth();
   }, []);
 
-  // --- STATE INTEGRITY CHECK (Fixes Stale Data Issue) ---
-  // If a user has completed nodes but not enough XP (e.g. from a previous dev session),
-  // it means the state is corrupt. We reset it to ensure the map renders correctly.
-  // Node 1-1 gives 50 XP. If XP < 50, you cannot have completed any nodes.
+  // --- DATA FETCHING (DB) ---
+  useEffect(() => {
+    const fetchCurriculum = async () => {
+      setLoadingData(true);
+      const { data, error } = await supabase
+        .from('curriculum_nodes')
+        .select('*')
+        .order('id', { ascending: true }); // Simple order by ID for now
+
+      if (error) {
+        console.error("Error fetching curriculum:", error);
+        setLoadingData(false);
+        return;
+      }
+
+      if (data) {
+        // Transform flat DB nodes into Chapter structure
+        const grouped: Record<string, CurriculumNode[]> = {};
+        
+        data.forEach((row: any) => {
+          const node: CurriculumNode = {
+            id: row.id,
+            title: row.title,
+            type: row.type,
+            // Spread the JSON data payload
+            description: row.data.description,
+            position: row.data.position,
+            xpReward: row.data.xpReward,
+            requiredXP: row.data.requiredXP,
+            requires: row.data.requires,
+            hotkeys: row.data.hotkeys,
+            steps: row.data.steps,
+            drills: row.data.drills
+          };
+
+          if (!grouped[row.chapter_id]) {
+            grouped[row.chapter_id] = [];
+          }
+          grouped[row.chapter_id].push(node);
+        });
+
+        const chapters: Chapter[] = Object.keys(grouped).sort().map(chapterId => ({
+          id: chapterId,
+          title: CHAPTER_TITLES[chapterId] || chapterId.toUpperCase(),
+          nodes: grouped[chapterId]
+        }));
+
+        setCurriculum(chapters);
+      }
+      setLoadingData(false);
+    };
+
+    fetchCurriculum();
+  }, []);
+
+  // Helper to find node in state (replacing the static import helper)
+  const findNode = (nodeId: string) => {
+    for (const chapter of curriculum) {
+      const node = chapter.nodes.find((n) => n.id === nodeId);
+      if (node) return node;
+    }
+    return null;
+  };
+
+  // Integrity Check
   useEffect(() => {
     if (isAuthenticated && !isCheckingAuth) {
       if (completedNodes.length > 0 && xp < 50) {
-        console.log("State Integrity Check Failed: Resetting Progress");
         resetProgress();
-        // Note: The 'NEW USER REDIRECT' below will catch the resulting 0 XP 
-        // and send them to Welcome to start fresh.
       }
     }
   }, [isAuthenticated, isCheckingAuth, completedNodes, xp, resetProgress]);
 
-  // --- NEW USER REDIRECT ---
-  // If user is logged in but has 0 XP, they haven't done onboarding.
+  // New User Redirect
   useEffect(() => {
     if (isAuthenticated && !isCheckingAuth && xp === 0) {
       router.replace("/welcome");
@@ -106,10 +211,9 @@ export default function MapPage() {
     return "locked";
   };
 
-  // --- Auto-Scroll Logic ---
+  // Auto-Scroll Logic
   useEffect(() => {
-    // Only scroll if mounted AND authenticated
-    if (!mounted || hasScrolled.current || !isAuthenticated) return;
+    if (!mounted || hasScrolled.current || !isAuthenticated || loadingData || curriculum.length === 0) return;
 
     let targetNodeId = null;
     const lastVisitedId = sessionStorage.getItem("sculptor_last_node");
@@ -118,17 +222,12 @@ export default function MapPage() {
         targetNodeId = lastVisitedId;
         sessionStorage.removeItem("sculptor_last_node");
     } else {
-        const allNodes = CURRICULUM.flatMap(c => c.nodes);
+        const allNodes = curriculum.flatMap(c => c.nodes);
         const activeNode = allNodes.find(n => {
            const status = getNodeStatus(n.id, n.requires);
            return status === 'active';
         });
-
-        if (activeNode) {
-          targetNodeId = activeNode.id;
-        } else {
-            targetNodeId = "node-1-1"; 
-        }
+        targetNodeId = activeNode ? activeNode.id : "node-1-1"; 
     }
 
     if (targetNodeId) {
@@ -139,31 +238,25 @@ export default function MapPage() {
                 const behavior = hasSeenIntro ? "auto" : "smooth";
                 element.scrollIntoView({ behavior, block: "center" });
                 hasScrolled.current = true;
-                if (!hasSeenIntro) {
-                    sessionStorage.setItem("has_seen_map_intro", "true");
-                }
+                if (!hasSeenIntro) sessionStorage.setItem("has_seen_map_intro", "true");
             }
         }, 100); 
     }
-  }, [mounted, completedNodes, isAuthenticated]);
+  }, [mounted, completedNodes, isAuthenticated, loadingData, curriculum]);
 
   const handleChallengeBoss = () => {
     if (!selectedBossId) return;
-    const chapter = CURRICULUM.find(c => c.nodes.some(n => n.id === selectedBossId));
-    if (chapter) {
-      router.push(`/lesson/${chapter.id}/${selectedBossId}`);
-    }
+    const chapter = curriculum.find(c => c.nodes.some(n => n.id === selectedBossId));
+    if (chapter) router.push(`/lesson/${chapter.id}/${selectedBossId}`);
   };
 
   const handleNodeClick = (nodeId: string, type: string, status: NodeStatus, requiredXP?: number) => {
     if (status === "locked") return;
-
     sessionStorage.setItem("sculptor_last_node", nodeId);
 
     if (type === "boss") {
       const requirement = requiredXP || 0;
-      
-      const nodeData = findNodeById(nodeId);
+      const nodeData = findNode(nodeId); // Use local helper
       const bossDrills = nodeData?.drills || [];
 
       setSelectedBossRequirement(requirement);
@@ -172,15 +265,12 @@ export default function MapPage() {
       setIsTrainingOpen(true);
       return;
     } else {
-      const chapter = CURRICULUM.find(c => c.nodes.some(n => n.id === nodeId));
-      if (chapter) {
-         router.push(`/lesson/${chapter.id}/${nodeId}`);
-      }
+      const chapter = curriculum.find(c => c.nodes.some(n => n.id === nodeId));
+      if (chapter) router.push(`/lesson/${chapter.id}/${nodeId}`);
     }
   };
 
-  // --- LOADING / AUTH CHECK STATE ---
-  if (!mounted || isCheckingAuth) {
+  if (!mounted || isCheckingAuth || loadingData) {
     return (
         <div className="min-h-screen bg-void text-white">
             <ForgeHeader />
@@ -189,42 +279,40 @@ export default function MapPage() {
     );
   }
 
-  // --- NOT AUTHENTICATED STATE ---
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-void text-white relative">
         <ForgeHeader />
-        {/* Blurred Map Background */}
         <div className="blur-sm pointer-events-none">
            <MapSkeleton />
         </div>
-        {/* Force Auth Modal */}
-        <AuthModal 
-          isOpen={true} 
-          onClose={() => router.push('/')} 
-        />
+        <AuthModal isOpen={true} onClose={() => router.push('/')} />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-void text-white relative">
+    <div className="min-h-screen bg-void text-white overflow-x-hidden relative transition-colors duration-1000">
       <ForgeHeader />
-      <Particles />
+      
+      {/* Dynamic Particles based on Streak */}
+      <Particles colorClass={theme.particle} />
 
       {/* --- ATMOSPHERE LAYERS --- */}
       <div className="fixed inset-0 pointer-events-none bg-[url('/noise.png')] opacity-5 z-0" />
-      <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-void via-slate-900/30 to-blue-900/40 z-0 h-[250vh] w-full" />
+      
+      {/* Dynamic Gradient based on Streak */}
+      <div className={`absolute inset-0 pointer-events-none bg-gradient-to-t ${theme.glow} z-0 h-[250vh] w-full transition-all duration-1000`} />
 
       {/* --- MAP CONTENT --- */}
       <main className="relative w-full max-w-3xl mx-auto min-h-[250vh] mt-10 mb-20 z-10">
         
         <svg className="absolute inset-0 w-full h-full pointer-events-none z-0">
-          {CURRICULUM.map((chapter) =>
+          {curriculum.map((chapter) =>
             chapter.nodes.map((node) => {
               if (!node.requires || node.requires.length === 0) return null;
               return node.requires.map((reqId) => {
-                const reqNode = findNodeById(reqId);
+                const reqNode = findNode(reqId); // Use local helper
                 if (!reqNode) return null;
                 const isUnlocked = completedNodes.includes(reqId);
                 return (
@@ -242,8 +330,9 @@ export default function MapPage() {
           )}
         </svg>
 
-        {CURRICULUM.map((chapter) => (
+        {curriculum.map((chapter) => (
           <div key={chapter.id}>
+            {/* Improved Chapter Title: Centered Watermark */}
             <div 
                className="absolute left-1/2 -translate-x-1/2 text-slate-600 font-serif font-black text-6xl md:text-8xl opacity-20 select-none pointer-events-none whitespace-nowrap z-0 tracking-tighter"
                style={{ top: `${chapter.nodes[0].position.y}%`, transform: 'translate(-50%, -50%)' }}
@@ -278,6 +367,22 @@ export default function MapPage() {
         onChallenge={handleChallengeBoss}
         drills={selectedDrills}
       />
+
+      {process.env.NODE_ENV === 'development' && (
+        <div className="fixed bottom-4 right-4 z-40 opacity-50 hover:opacity-100 transition-opacity">
+            <button
+            onClick={() => {
+                if (confirm("⚠️ RESET ALL PROGRESS? This cannot be undone.")) {
+                resetProgress();
+                window.location.reload();
+                }
+            }}
+            className="text-xs font-mono text-red-500 bg-slate-900/80 border border-red-900/50 px-3 py-2 rounded hover:bg-red-900/20 hover:text-red-400"
+            >
+            [DEV: RESET DATA]
+            </button>
+        </div>
+      )}
     </div>
   );
 }

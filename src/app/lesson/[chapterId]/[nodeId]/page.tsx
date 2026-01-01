@@ -3,13 +3,15 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useUserStore } from "@/lib/store/userStore";
-import { findNodeById } from "@/lib/data/curriculum";
+// Removed static import: import { findNodeById } from "@/lib/data/curriculum";
 import { ForgeHeader } from "@/components/layout/ForgeHeader";
 import { RuneTablet } from "@/components/lesson/RuneTablet";
 import { HoldButton } from "@/components/lesson/HoldButton";
 import { MediaFrame } from "@/components/lesson/MediaFrame";
-import { ChevronLeft, Map as MapIcon } from "lucide-react";
+import { ChevronLeft, Map as MapIcon, Loader2 } from "lucide-react";
 import Link from "next/link";
+import { supabase } from "@/lib/supabase";
+import { CurriculumNode } from "@/lib/types";
 
 // Helper to render **Bold** text
 const FormattedText = ({ text }: { text: string }) => {
@@ -37,18 +39,71 @@ export default function LessonPage() {
   const router = useRouter();
   const { completeNode, completedNodes } = useUserStore();
   const [mounted, setMounted] = useState(false);
+  
+  // Dynamic Data State
+  const [node, setNode] = useState<CurriculumNode | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const chapterId = params.chapterId as string;
   const nodeId = params.nodeId as string;
 
-  const node = findNodeById(nodeId);
   const isCompleted = completedNodes.includes(nodeId);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  // --- DATA FETCHING (DB) ---
+  useEffect(() => {
+    const fetchLesson = async () => {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('curriculum_nodes')
+        .select('*')
+        .eq('id', nodeId)
+        .single();
+
+      if (error) {
+        console.error("Error fetching lesson:", error);
+        setLoading(false);
+        return;
+      }
+
+      if (data) {
+        // Transform DB row to CurriculumNode
+        const loadedNode: CurriculumNode = {
+          id: data.id,
+          title: data.title,
+          type: data.type,
+          // Spread the JSON payload
+          description: data.data.description,
+          position: data.data.position,
+          xpReward: data.data.xpReward,
+          requiredXP: data.data.requiredXP,
+          requires: data.data.requires,
+          hotkeys: data.data.hotkeys,
+          steps: data.data.steps,
+          drills: data.data.drills
+        };
+        setNode(loadedNode);
+      }
+      setLoading(false);
+    };
+
+    if (nodeId) {
+      fetchLesson();
+    }
+  }, [nodeId]);
+
   if (!mounted) return null;
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-void flex items-center justify-center text-slate-500">
+        <Loader2 className="animate-spin text-amber-500 mr-2" /> Loading Ritual...
+      </div>
+    );
+  }
 
   if (!node) {
     return (
