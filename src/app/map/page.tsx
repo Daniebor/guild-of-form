@@ -171,6 +171,13 @@ export default function MapPage() {
     checkAuth();
   }, []);
 
+  // --- NEW USER REDIRECT ---
+  useEffect(() => {
+    if (isAuthenticated && !isCheckingAuth && xp === 0) {
+      router.replace("/welcome");
+    }
+  }, [isAuthenticated, isCheckingAuth, xp, router]);
+
   // --- DATA FETCHING ---
   useEffect(() => {
     const fetchCurriculum = async () => {
