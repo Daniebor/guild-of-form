@@ -38,11 +38,6 @@ export const ForgeHeader = () => {
     return () => subscription.unsubscribe();
   }, [syncWithSupabase]);
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    window.location.reload();
-  };
-
   const getFireColor = () => {
     if (streak > 59) return "text-blueFlame drop-shadow-[0_0_8px_rgba(59,130,246,0.8)]";
     if (streak > 14) return "text-amber-blaze drop-shadow-[0_0_8px_rgba(251,191,36,0.8)]";
@@ -54,7 +49,7 @@ export const ForgeHeader = () => {
     <>
       <header className="sticky top-0 z-50 w-full bg-void/90 backdrop-blur-md border-b border-slate-800 shadow-md">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 group">
+          <Link href="/map" className="flex items-center gap-2 group">
              <span className="font-serif font-bold text-lg md:text-xl text-slate-100 group-hover:text-amber transition-colors tracking-widest">
                THE SCULPTOR'S SAGA
              </span>
@@ -81,15 +76,15 @@ export const ForgeHeader = () => {
                 </span>
               </div>
 
-              {/* Auth Button */}
+              {/* Auth Button / Profile Link */}
               {session ? (
-                <button 
-                  onClick={handleLogout}
-                  className="p-2 rounded-full bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"
-                  title="Logout"
+                <Link 
+                  href="/profile"
+                  className="p-2 rounded-full bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition-colors border border-transparent hover:border-slate-600"
+                  title="Profile & Settings"
                 >
                   <User size={18} />
-                </button>
+                </Link>
               ) : (
                 <Button 
                   onClick={() => setIsAuthOpen(true)} 

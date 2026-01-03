@@ -1,46 +1,139 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useUserStore } from "@/lib/store/userStore";
-import { CURRICULUM, findNodeById } from "@/lib/data/curriculum";
 import { ForgeHeader } from "@/components/layout/ForgeHeader";
-import { MapNode } from "@/components/map/MapNode";
-import { MapConnector } from "@/components/map/MapConnector";
 import { AnvilOverlay } from "@/components/training/AnvilOverlay";
-import { MapSkeleton } from "@/components/map/MapSkeleton";
-import { NodeStatus, Drill } from "@/lib/types";
+import { NodeStatus, Drill, Chapter, CurriculumNode } from "@/lib/types";
 import { supabase } from "@/lib/supabase"; 
 import { AuthModal } from "@/components/auth/AuthModal";
+import { motion } from "framer-motion";
+import { Lock, Star, Play, Hexagon, ZoomIn, ZoomOut, Move } from "lucide-react";
+import clsx from "clsx";
 
-// --- Visual Polish: Floating Particles Component ---
-const Particles = () => {
+// --- THEME LOGIC ---
+const useForgeTheme = (streak: number) => {
+  return useMemo(() => {
+    if (streak > 59) return { 
+      name: 'Star-Heart', 
+      particle: 'bg-cyan-200 shadow-[0_0_15px_rgba(165,243,252,0.8)]', 
+      bg: 'radial-gradient(circle at center, #0f172a 0%, #020617 100%)' 
+    };
+    if (streak > 29) return {
+      name: 'Sun-Forged',
+      particle: 'bg-yellow-100 shadow-[0_0_15px_rgba(253,224,71,0.8)]',
+      bg: 'radial-gradient(circle at center, #1e1b4b 0%, #020617 100%)'
+    };
+    if (streak > 14) return { 
+      name: 'Inferno',    
+      particle: 'bg-amber-300', 
+      bg: 'radial-gradient(circle at center, #3f2c06 0%, #0a0a0a 100%)' 
+    };
+    if (streak > 2)  return { 
+      name: 'Kindled',    
+      particle: 'bg-amber-600', 
+      bg: 'radial-gradient(circle at center, #271a0c 0%, #0a0a0a 100%)' 
+    };
+    return { 
+      name: 'Cold Iron',  
+      particle: 'bg-slate-700', 
+      bg: '#0a0a0a' 
+    };
+  }, [streak]);
+};
+
+// --- VISUAL POLISH: Dynamic Particles ---
+const Particles = ({ colorClass }: { colorClass: string }) => {
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
   if (!mounted) return null;
   return (
-    <div className="fixed inset-0 pointer-events-none z-1 overflow-hidden">
-      {[...Array(25)].map((_, i) => (
+    <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+      {[...Array(30)].map((_, i) => (
         <div
           key={i}
-          className="absolute bg-amber-400 w-1.5 h-1.5 rounded-full blur-[1px]"
+          className={`absolute w-1 h-1 rounded-full blur-[0.5px] transition-colors duration-1000 ${colorClass}`}
           style={{
             left: `${Math.random() * 100}%`,
             top: `${Math.random() * 100}%`,
-            animation: `float ${15 + Math.random() * 20}s linear infinite`,
-            animationDelay: `-${Math.random() * 20}s`,
-            opacity: 0,
+            opacity: Math.random() * 0.5 + 0.2,
           }}
         />
       ))}
-      <style jsx>{`
-        @keyframes float {
-          0% { transform: translateY(100vh) scale(0.5); opacity: 0; }
-          20% { opacity: 0.6; }
-          80% { opacity: 0.6; }
-          100% { transform: translateY(-20vh) scale(1.5); opacity: 0; }
-        }
-      `}</style>
+    </div>
+  );
+};
+
+// Fallback titles
+const CHAPTER_TITLES: Record<string, string> = {
+  "chapter-1": "Chapter I: The Awakening",
+  "chapter-2": "Chapter II: The First Tools",
+  "chapter-3": "Chapter III: Primordial Clay",
+  "chapter-4": "Chapter IV: The Binding",
+  "chapter-5": "Chapter V: Golem's Assembly",
+};
+
+// --- LOCAL COMPONENT: Canvas Node (Supports Pixels) ---
+// We define this here to support absolute pixel positioning within the canvas container
+const CanvasNode = ({ node, status, onClick }: { node: CurriculumNode, status: NodeStatus, onClick: () => void }) => {
+  const isBoss = node.type === "boss";
+  const isLocked = status === "locked";
+  const isCompleted = status === "completed";
+  const isActive = status === "active";
+
+  const size = isBoss ? 64 : 40;
+  const iconSize = isBoss ? 24 : 16;
+
+  const statusClasses = clsx({
+    "bg-slate-900 border-slate-700 text-slate-600 grayscale opacity-70 cursor-not-allowed": isLocked,
+    "bg-slate-900 border-amber-500 text-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.4)] cursor-pointer hover:scale-110": isActive,
+    "bg-amber-500 border-amber-300 text-void shadow-lg shadow-amber-500/20 cursor-pointer hover:bg-amber-400": isCompleted,
+  });
+
+  return (
+    <div
+      className="absolute flex flex-col items-center gap-2 group"
+      style={{ 
+        left: node.position.x, 
+        top: node.position.y,
+        width: size,
+        height: size,
+        transform: 'translate(-50%, -50%)' // Center anchor
+      }}
+    >
+      {/* Active Ring Effect */}
+      {isActive && (
+        <div className="absolute inset-0 -m-4 pointer-events-none">
+           <motion.svg className="w-full h-full text-amber-500/30" viewBox="0 0 100 100" animate={{ rotate: 360 }} transition={{ duration: 10, repeat: Infinity, ease: "linear" }}>
+             <circle cx="50" cy="50" r="48" stroke="currentColor" strokeWidth="2" fill="none" strokeDasharray="10 15" />
+           </motion.svg>
+        </div>
+      )}
+
+      <motion.button
+        onClick={onClick}
+        disabled={isLocked}
+        className={clsx(
+          "relative flex items-center justify-center rounded-full border-2 transition-all duration-300 z-10 w-full h-full",
+          statusClasses
+        )}
+        whileTap={!isLocked ? { scale: 0.9 } : {}}
+      >
+        {isBoss && <Hexagon className={clsx("absolute inset-0 w-full h-full", isLocked ? "stroke-slate-700" : "stroke-current")} strokeWidth={1} />}
+        <div className="z-10 relative">
+          {isLocked && <Lock size={iconSize} />}
+          {isActive && <Play size={iconSize} fill="currentColor" />}
+          {isCompleted && <Star size={iconSize} fill="currentColor" />}
+        </div>
+      </motion.button>
+
+      <div className={clsx(
+        "absolute top-full mt-3 px-3 py-1 bg-void/90 border border-slate-700/50 backdrop-blur-md rounded text-xs font-serif tracking-wide whitespace-nowrap transition-all duration-300 pointer-events-none z-30 shadow-xl",
+        isLocked ? "opacity-0 group-hover:opacity-50" : "opacity-0 group-hover:opacity-100"
+      )}>
+        {node.title}
+      </div>
     </div>
   );
 };
@@ -48,56 +141,140 @@ const Particles = () => {
 export default function MapPage() {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
-  const { completedNodes, xp, resetProgress } = useUserStore();
-  const hasScrolled = useRef(false);
+  const { completedNodes, xp, streak, resetProgress } = useUserStore();
+  
+  // Canvas State
+  const [viewState, setViewState] = useState({ x: 0, y: 0, scale: 1 });
+  const [isDragging, setIsDragging] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  // Auth State
+  const [curriculum, setCurriculum] = useState<Chapter[]>([]);
+  const [loadingData, setLoadingData] = useState(true);
+  const theme = useForgeTheme(streak);
+
+  // Auth & Training State
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  // State for the Training Ground Overlay
   const [isTrainingOpen, setIsTrainingOpen] = useState(false);
   const [selectedBossRequirement, setSelectedBossRequirement] = useState(0);
   const [selectedBossId, setSelectedBossId] = useState<string | null>(null);
   const [selectedDrills, setSelectedDrills] = useState<Drill[]>([]); 
 
+  // --- INIT ---
   useEffect(() => {
     setMounted(true);
-    
-    // Check Auth on Mount
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session) {
-        setIsAuthenticated(true);
-      }
+      if (session) setIsAuthenticated(true);
       setIsCheckingAuth(false);
     };
     checkAuth();
   }, []);
 
-  // --- STATE INTEGRITY CHECK (Fixes Stale Data Issue) ---
-  // If a user has completed nodes but not enough XP (e.g. from a previous dev session),
-  // it means the state is corrupt. We reset it to ensure the map renders correctly.
-  // Node 1-1 gives 50 XP. If XP < 50, you cannot have completed any nodes.
+  // --- DATA FETCHING ---
   useEffect(() => {
-    if (isAuthenticated && !isCheckingAuth) {
-      if (completedNodes.length > 0 && xp < 50) {
-        console.log("State Integrity Check Failed: Resetting Progress");
-        resetProgress();
-        // Note: The 'NEW USER REDIRECT' below will catch the resulting 0 XP 
-        // and send them to Welcome to start fresh.
-      }
-    }
-  }, [isAuthenticated, isCheckingAuth, completedNodes, xp, resetProgress]);
+    const fetchCurriculum = async () => {
+      setLoadingData(true);
+      const { data, error } = await supabase.from('curriculum_nodes').select('*').order('id', { ascending: true });
+      
+      if (data && !error) {
+        const grouped: Record<string, CurriculumNode[]> = {};
+        data.forEach((row: any) => {
+          const node = { ...row, ...row.data, id: row.id, title: row.title, type: row.type };
+          if (!grouped[row.chapter_id]) grouped[row.chapter_id] = [];
+          grouped[row.chapter_id].push(node);
+        });
 
-  // --- NEW USER REDIRECT ---
-  // If user is logged in but has 0 XP, they haven't done onboarding.
+        const chapters: Chapter[] = Object.keys(grouped).sort().map(chapterId => ({
+          id: chapterId,
+          title: CHAPTER_TITLES[chapterId] || chapterId.toUpperCase(),
+          nodes: grouped[chapterId]
+        }));
+        setCurriculum(chapters);
+      }
+      setLoadingData(false);
+    };
+    fetchCurriculum();
+  }, []);
+
+  // --- CANVAS CONTROLS ---
+  
+  // Auto-Focus Logic
   useEffect(() => {
-    if (isAuthenticated && !isCheckingAuth && xp === 0) {
-      router.replace("/welcome");
+    if (!mounted || loadingData || curriculum.length === 0 || !containerRef.current) return;
+
+    // Find Active Node
+    const allNodes = curriculum.flatMap(c => c.nodes);
+    let targetNode = allNodes.find(n => {
+       const reqs = n.requires || [];
+       const completed = completedNodes.includes(n.id);
+       const unlocked = reqs.every(id => completedNodes.includes(id));
+       return unlocked && !completed;
+    });
+
+    if (!targetNode) targetNode = allNodes[0]; // Default start
+
+    if (targetNode) {
+      // Center the camera on this node
+      const screenW = window.innerWidth;
+      const screenH = window.innerHeight;
+      
+      setViewState({
+        x: screenW / 2 - targetNode.position.x,
+        y: screenH / 2 - targetNode.position.y,
+        scale: 1
+      });
     }
-  }, [isAuthenticated, isCheckingAuth, xp, router]);
+  }, [loadingData, curriculum]);
+
+  const handleWheel = (e: React.WheelEvent) => {
+    if (isTrainingOpen) return;
+    // Simple zoom logic
+    const scaleSpeed = 0.001;
+    const newScale = Math.max(0.2, Math.min(3, viewState.scale - e.deltaY * scaleSpeed));
+    setViewState(prev => ({ ...prev, scale: newScale }));
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!isDragging) return;
+    setViewState(prev => ({
+      ...prev,
+      x: prev.x + e.movementX,
+      y: prev.y + e.movementY
+    }));
+  };
+
+  // --- GAMEPLAY LOGIC ---
+
+  const findNode = (nodeId: string) => {
+    for (const chapter of curriculum) {
+      const node = chapter.nodes.find((n) => n.id === nodeId);
+      if (node) return node;
+    }
+    return null;
+  };
+
+  const handleNodeClick = (nodeId: string, type: string, status: NodeStatus, requiredXP?: number) => {
+    if (status === "locked") return;
+    
+    if (type === "boss") {
+      const requirement = requiredXP || 0;
+      const nodeData = findNode(nodeId);
+      setSelectedBossRequirement(requirement);
+      setSelectedBossId(nodeId);
+      setSelectedDrills(nodeData?.drills || []);
+      setIsTrainingOpen(true);
+    } else {
+      const chapter = curriculum.find(c => c.nodes.some(n => n.id === nodeId));
+      if (chapter) router.push(`/lesson/${chapter.id}/${nodeId}`);
+    }
+  };
+
+  const handleChallengeBoss = () => {
+    if (!selectedBossId) return;
+    const chapter = curriculum.find(c => c.nodes.some(n => n.id === selectedBossId));
+    if (chapter) router.push(`/lesson/${chapter.id}/${selectedBossId}`);
+  };
 
   const getNodeStatus = (nodeId: string, requirements: string[] = []): NodeStatus => {
     if (completedNodes.includes(nodeId)) return "completed";
@@ -106,169 +283,120 @@ export default function MapPage() {
     return "locked";
   };
 
-  // --- Auto-Scroll Logic ---
-  useEffect(() => {
-    // Only scroll if mounted AND authenticated
-    if (!mounted || hasScrolled.current || !isAuthenticated) return;
+  // --- RENDERING ---
 
-    let targetNodeId = null;
-    const lastVisitedId = sessionStorage.getItem("sculptor_last_node");
-    
-    if (lastVisitedId) {
-        targetNodeId = lastVisitedId;
-        sessionStorage.removeItem("sculptor_last_node");
-    } else {
-        const allNodes = CURRICULUM.flatMap(c => c.nodes);
-        const activeNode = allNodes.find(n => {
-           const status = getNodeStatus(n.id, n.requires);
-           return status === 'active';
-        });
-
-        if (activeNode) {
-          targetNodeId = activeNode.id;
-        } else {
-            targetNodeId = "node-1-1"; 
-        }
-    }
-
-    if (targetNodeId) {
-        setTimeout(() => {
-            const element = document.getElementById(`node-${targetNodeId}`);
-            if (element) {
-                const hasSeenIntro = sessionStorage.getItem("has_seen_map_intro");
-                const behavior = hasSeenIntro ? "auto" : "smooth";
-                element.scrollIntoView({ behavior, block: "center" });
-                hasScrolled.current = true;
-                if (!hasSeenIntro) {
-                    sessionStorage.setItem("has_seen_map_intro", "true");
-                }
-            }
-        }, 100); 
-    }
-  }, [mounted, completedNodes, isAuthenticated]);
-
-  const handleChallengeBoss = () => {
-    if (!selectedBossId) return;
-    const chapter = CURRICULUM.find(c => c.nodes.some(n => n.id === selectedBossId));
-    if (chapter) {
-      router.push(`/lesson/${chapter.id}/${selectedBossId}`);
-    }
-  };
-
-  const handleNodeClick = (nodeId: string, type: string, status: NodeStatus, requiredXP?: number) => {
-    if (status === "locked") return;
-
-    sessionStorage.setItem("sculptor_last_node", nodeId);
-
-    if (type === "boss") {
-      const requirement = requiredXP || 0;
-      
-      const nodeData = findNodeById(nodeId);
-      const bossDrills = nodeData?.drills || [];
-
-      setSelectedBossRequirement(requirement);
-      setSelectedBossId(nodeId);
-      setSelectedDrills(bossDrills);
-      setIsTrainingOpen(true);
-      return;
-    } else {
-      const chapter = CURRICULUM.find(c => c.nodes.some(n => n.id === nodeId));
-      if (chapter) {
-         router.push(`/lesson/${chapter.id}/${nodeId}`);
-      }
-    }
-  };
-
-  // --- LOADING / AUTH CHECK STATE ---
-  if (!mounted || isCheckingAuth) {
-    return (
-        <div className="min-h-screen bg-void text-white">
-            <ForgeHeader />
-            <MapSkeleton />
-        </div>
-    );
-  }
-
-  // --- NOT AUTHENTICATED STATE ---
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-void text-white relative">
-        <ForgeHeader />
-        {/* Blurred Map Background */}
-        <div className="blur-sm pointer-events-none">
-           <MapSkeleton />
-        </div>
-        {/* Force Auth Modal */}
-        <AuthModal 
-          isOpen={true} 
-          onClose={() => router.push('/')} 
-        />
-      </div>
-    );
-  }
+  if (!mounted || isCheckingAuth) return <div className="min-h-screen bg-void"><ForgeHeader /></div>;
+  if (!isAuthenticated) return <div className="min-h-screen bg-void"><ForgeHeader /><AuthModal isOpen={true} onClose={() => router.push('/')} /></div>;
 
   return (
-    <div className="min-h-screen bg-void text-white overflow-x-hidden relative">
+    <div className="min-h-screen bg-void overflow-hidden text-white relative select-none">
       <ForgeHeader />
-      <Particles />
+      
+      {/* Background Atmosphere */}
+      <div className="absolute inset-0 z-0" style={{ background: theme.bg }}>
+         <Particles colorClass={theme.particle} />
+         <div className="absolute inset-0 bg-[url('/noise.png')] opacity-5" />
+      </div>
 
-      {/* --- ATMOSPHERE LAYERS --- */}
-      <div className="fixed inset-0 pointer-events-none bg-[url('/noise.png')] opacity-5 z-0" />
-      <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-void via-slate-900/30 to-blue-900/40 z-0 h-[250vh] w-full" />
+      {/* --- INFINITE CANVAS --- */}
+      <div 
+        ref={containerRef}
+        className="absolute inset-0 z-10 cursor-move active:cursor-grabbing"
+        onWheel={handleWheel}
+        onPointerDown={() => setIsDragging(true)}
+        onPointerUp={() => setIsDragging(false)}
+        onPointerLeave={() => setIsDragging(false)}
+        onPointerMove={handlePointerMove}
+      >
+        <motion.div
+          className="relative w-full h-full origin-top-left"
+          // We use inline styles for performance during drag
+          style={{
+             transform: `translate(${viewState.x}px, ${viewState.y}px) scale(${viewState.scale})`
+          }}
+        >
+           {/* Grid Pattern for spatial reference */}
+           <div 
+             className="absolute -inset-[5000px] opacity-10 pointer-events-none" 
+             style={{ 
+               backgroundImage: 'linear-gradient(#334155 1px, transparent 1px), linear-gradient(90deg, #334155 1px, transparent 1px)', 
+               backgroundSize: '100px 100px' 
+             }} 
+           />
 
-      {/* --- MAP CONTENT --- */}
-      <main className="relative w-full max-w-3xl mx-auto min-h-[250vh] mt-10 mb-20 z-10">
-        
-        <svg className="absolute inset-0 w-full h-full pointer-events-none z-0">
-          {CURRICULUM.map((chapter) =>
-            chapter.nodes.map((node) => {
-              if (!node.requires || node.requires.length === 0) return null;
-              return node.requires.map((reqId) => {
-                const reqNode = findNodeById(reqId);
-                if (!reqNode) return null;
-                const isUnlocked = completedNodes.includes(reqId);
-                return (
-                  <MapConnector
-                    key={`${reqId}-${node.id}`}
-                    startX={reqNode.position.x}
-                    startY={reqNode.position.y}
-                    endX={node.position.x}
-                    endY={node.position.y}
-                    status={isUnlocked ? "unlocked" : "locked"}
-                  />
-                );
-              });
-            })
-          )}
-        </svg>
+           {/* --- RENDER CONTENT --- */}
+           {curriculum.map((chapter) => (
+             <div key={chapter.id}>
+               {/* Connections Layer */}
+               <svg className="absolute top-0 left-0 overflow-visible pointer-events-none" style={{ width: 1, height: 1 }}>
+                 {chapter.nodes.map(node => {
+                    const reqs = node.requires || [];
+                    return reqs.map(reqId => {
+                      const target = findNode(reqId);
+                      if (!target) return null;
+                      const isUnlocked = completedNodes.includes(reqId);
+                      return (
+                        <line 
+                          key={`${reqId}-${node.id}`}
+                          x1={target.position.x} y1={target.position.y}
+                          x2={node.position.x} y2={node.position.y}
+                          strokeWidth={2}
+                          className={isUnlocked ? "stroke-amber-500/50" : "stroke-slate-800"}
+                          strokeDasharray={isUnlocked ? "0" : "8 8"}
+                        />
+                      )
+                    });
+                 })}
+               </svg>
 
-        {CURRICULUM.map((chapter) => (
-          <div key={chapter.id}>
-            <div 
-               className="absolute left-1/2 -translate-x-1/2 text-slate-600 font-serif font-black text-6xl md:text-8xl opacity-20 select-none pointer-events-none whitespace-nowrap z-0 tracking-tighter"
-               style={{ top: `${chapter.nodes[0].position.y}%`, transform: 'translate(-50%, -50%)' }}
-            >
-              {chapter.title.split(':')[0]} 
-            </div>
+               {/* Nodes Layer */}
+               {chapter.nodes.map(node => (
+                 <CanvasNode
+                   key={node.id}
+                   node={node}
+                   status={getNodeStatus(node.id, node.requires)}
+                   onClick={() => handleNodeClick(node.id, node.type, getNodeStatus(node.id, node.requires), node.requiredXP)}
+                 />
+               ))}
 
-            {chapter.nodes.map((node) => {
-              const status = getNodeStatus(node.id, node.requires);
-              return (
-                <MapNode
-                  key={node.id}
-                  id={node.id}
-                  type={node.type}
-                  title={node.title}
-                  x={node.position.x}
-                  y={node.position.y}
-                  status={status}
-                  onClick={() => handleNodeClick(node.id, node.type, status, node.requiredXP)}
-                />
-              );
-            })}
-          </div>
-        ))}
-      </main>
+               {/* Chapter Title Marker */}
+               {chapter.nodes.length > 0 && (
+                 <div 
+                    className="absolute text-slate-700/50 font-serif font-bold text-6xl pointer-events-none whitespace-nowrap z-0"
+                    style={{ 
+                        left: chapter.nodes[0].position.x, 
+                        top: chapter.nodes[0].position.y - 100,
+                        transform: 'translate(-50%, -50%)'
+                    }}
+                 >
+                   {chapter.title.split(':')[0]}
+                 </div>
+               )}
+             </div>
+           ))}
+        </motion.div>
+      </div>
+
+      {/* --- HUD CONTROLS --- */}
+      <div className="fixed bottom-8 right-8 z-50 flex flex-col gap-2">
+        <div className="bg-slate-900/80 backdrop-blur border border-slate-700 rounded-lg p-2 flex flex-col gap-2 shadow-xl">
+           <button onClick={() => setViewState(p => ({ ...p, scale: p.scale + 0.2 }))} className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded"><ZoomIn size={20} /></button>
+           <button onClick={() => setViewState(p => ({ ...p, scale: Math.max(0.2, p.scale - 0.2) }))} className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded"><ZoomOut size={20} /></button>
+           <div className="w-full h-px bg-slate-700" />
+           <button onClick={() => {
+              // Reset View to Active Node logic (simplified reset here)
+              const allNodes = curriculum.flatMap(c => c.nodes);
+              const target = allNodes.find(n => !completedNodes.includes(n.id)) || allNodes[0];
+              if (target) {
+                 setViewState({
+                    x: window.innerWidth / 2 - target.position.x,
+                    y: window.innerHeight / 2 - target.position.y,
+                    scale: 1
+                 });
+              }
+           }} className="p-2 text-amber-500 hover:text-amber-300 hover:bg-slate-800 rounded" title="Center View"><Move size={20} /></button>
+        </div>
+      </div>
 
       <AnvilOverlay 
         isOpen={isTrainingOpen} 
@@ -278,22 +406,6 @@ export default function MapPage() {
         onChallenge={handleChallengeBoss}
         drills={selectedDrills}
       />
-
-      {process.env.NODE_ENV === 'development' && (
-        <div className="fixed bottom-4 right-4 z-40 opacity-50 hover:opacity-100 transition-opacity">
-            <button
-            onClick={() => {
-                if (confirm("⚠️ RESET ALL PROGRESS? This cannot be undone.")) {
-                resetProgress();
-                window.location.reload();
-                }
-            }}
-            className="text-xs font-mono text-red-500 bg-slate-900/80 border border-red-900/50 px-3 py-2 rounded hover:bg-red-900/20 hover:text-red-400"
-            >
-            [DEV: RESET DATA]
-            </button>
-        </div>
-      )}
     </div>
   );
 }

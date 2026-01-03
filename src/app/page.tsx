@@ -3,7 +3,7 @@ import { Map, Flame, Swords, ChevronDown, Scroll } from "lucide-react";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-void text-slate-200 overflow-x-hidden selection:bg-amber-900 selection:text-white">
+    <div className="min-h-screen bg-void text-slate-200 selection:bg-amber-900 selection:text-white">
       
       {/* --- HERO SECTION --- */}
       <section className="relative flex flex-col items-center justify-center min-h-screen text-center px-6">
@@ -88,7 +88,7 @@ export default function Home() {
               </div>
               <h3 className="text-2xl font-serif text-slate-200 mb-4 group-hover:text-amber-500 transition-colors">The Grimoire</h3>
               <p className="text-slate-500 leading-relaxed">
-                Visual, bite-sized lessons. No long lectures. Just the "Runes" (Hotkeys) and the Rituals you need to create art.
+                Visual, bite-sized lessons. No long lectures. Just the "Runes" (Hotkeys) and the Trials you need to create art.
               </p>
             </div>
           </div>
