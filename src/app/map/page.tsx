@@ -111,9 +111,9 @@ const CanvasNode = ({ node, status, onClick }: { node: CurriculumNode, status: N
         </div>
       )}
 
-      <motion.button
+      <motion.div
+        role="button"
         onClick={onClick}
-        disabled={isLocked}
         className={clsx(
           "relative flex items-center justify-center rounded-full border-2 transition-all duration-300 z-10 w-full h-full",
           statusClasses
@@ -126,7 +126,7 @@ const CanvasNode = ({ node, status, onClick }: { node: CurriculumNode, status: N
           {isActive && <Play size={iconSize} fill="currentColor" />}
           {isCompleted && <Star size={iconSize} fill="currentColor" />}
         </div>
-      </motion.button>
+      </motion.div>
 
       <div className={clsx(
         "absolute top-full mt-3 px-3 py-1 bg-void/90 border border-slate-700/50 backdrop-blur-md rounded text-xs font-serif tracking-wide whitespace-nowrap transition-all duration-300 pointer-events-none z-30 shadow-xl",
@@ -415,7 +415,7 @@ export default function MapPage() {
                           x1={target.position.x} y1={target.position.y}
                           x2={node.position.x} y2={node.position.y}
                           strokeWidth={2}
-                          className={isUnlocked ? "stroke-amber-500/50" : "stroke-slate-800"}
+                          className={clsx(isUnlocked ? "stroke-amber-500/50" : "stroke-slate-800", "pointer-events-none")}
                           strokeDasharray={isUnlocked ? "0" : "8 8"}
                         />
                       )
