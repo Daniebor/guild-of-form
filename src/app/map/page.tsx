@@ -246,6 +246,19 @@ export default function MapPage() {
 
   // --- TOUCH / POINTER LOGIC ---
 
+  const getCentroid = (points: { x: number, y: number }[]) => {
+    let x = 0, y = 0;
+    points.forEach(p => { x += p.x; y += p.y; });
+    return { x: x / points.length, y: y / points.length };
+  };
+
+  const getDistance = (points: { x: number, y: number }[]) => {
+    if (points.length < 2) return 0;
+    const p1 = points[0];
+    const p2 = points[1];
+    return Math.hypot(p1.x - p2.x, p1.y - p2.y);
+  };
+
   const handlePointerDown = (e: React.PointerEvent) => {
     e.currentTarget.setPointerCapture(e.pointerId);
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
@@ -258,55 +271,50 @@ export default function MapPage() {
 
   const handlePointerMove = (e: React.PointerEvent) => {
     if (isTrainingOpen) return;
-    
-    const { pointerId, clientX, clientY } = e;
+    e.preventDefault();
+
     const cache = pointers.current;
-    
-    // If this pointer isn't tracked (shouldn't happen if captured), ignore
-    if (!cache.has(pointerId)) return;
-    
-    const prev = cache.get(pointerId)!;
-    
-    // 1. SINGLE POINTER (PAN)
-    if (cache.size === 1) {
-      const dx = clientX - prev.x;
-      const dy = clientY - prev.y;
-      setViewState(prev => ({
-        ...prev,
-        x: prev.x + dx,
-        y: prev.y + dy
-      }));
-    }
-    // 2. TWO POINTERS (PINCH ZOOM)
-    else if (cache.size === 2) {
-      // Find the other pointer
-      let otherPointer = null;
-      // Use Array.from to avoid TS iteration issues
-      for (const [id, p] of Array.from(cache.entries())) {
-        if (id !== pointerId) {
-          otherPointer = p;
-          break;
-        }
-      }
+    if (!cache.has(e.pointerId)) return;
 
-      if (otherPointer) {
-        // Calculate distance between fingers BEFORE this move
-        const distOld = Math.hypot(prev.x - otherPointer.x, prev.y - otherPointer.y);
-        // Calculate distance between fingers AFTER this move
-        const distNew = Math.hypot(clientX - otherPointer.x, clientY - otherPointer.y);
-        
-        if (distOld > 0) {
-          const scaleFactor = distNew / distOld;
-          setViewState(v => ({
-            ...v,
-            scale: Math.max(0.2, Math.min(3, v.scale * scaleFactor))
-          }));
-        }
-      }
-    }
+    // 1. Snapshot Previous State (Before updating the moving pointer)
+    const prevPoints = Array.from(cache.values());
+    if (prevPoints.length === 0) return;
 
-    // Update cache for next frame
-    cache.set(pointerId, { x: clientX, y: clientY });
+    const prevCentroid = getCentroid(prevPoints);
+    const prevDist = getDistance(prevPoints);
+
+    // 2. Update Cache with new position
+    cache.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+    // 3. Snapshot Current State (After updating)
+    const currPoints = Array.from(cache.values());
+    const currCentroid = getCentroid(currPoints);
+    const currDist = getDistance(currPoints);
+
+    // 4. Calculate Transforms
+    setViewState(prevView => {
+       let newScale = prevView.scale;
+       
+       // Calculate Scale Change (only if 2+ fingers)
+       if (currPoints.length >= 2 && prevDist > 0) {
+          const scaleFactor = currDist / prevDist;
+          newScale = Math.max(0.2, Math.min(3, prevView.scale * scaleFactor));
+       }
+
+       // Calculate Pan Change (Movement of the centroid + Compensation for zoom origin)
+       // Formula: x' = currCentroid - ((prevCentroid - prevX) / prevScale) * newScale
+       
+       const effectiveScaleRatio = newScale / prevView.scale;
+       
+       const newX = currCentroid.x - (prevCentroid.x - prevView.x) * effectiveScaleRatio;
+       const newY = currCentroid.y - (prevCentroid.y - prevView.y) * effectiveScaleRatio;
+
+       return {
+          x: newX,
+          y: newY,
+          scale: newScale
+       };
+    });
   };
 
   // --- GAMEPLAY LOGIC ---
