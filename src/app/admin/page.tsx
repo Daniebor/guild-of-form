@@ -311,15 +311,15 @@ export default function AdminCMS() {
   if (!isAdmin) return null;
 
   return (
-    <div className="min-h-screen bg-void text-slate-200 flex flex-col">
-      <div className="relative z-50">
+    <div className="h-screen bg-void text-slate-200 flex flex-col overflow-hidden">
+      <div className="relative z-50 shrink-0">
         <ForgeHeader />
       </div>
       
-      <main className="flex-1 grid grid-cols-12 h-[calc(100vh-64px)] overflow-hidden">
+      <main className="flex-1 grid grid-cols-12 overflow-hidden min-h-0">
         
         {/* LEFT: Node List */}
-        <div className="col-span-2 border-r border-slate-800 bg-slate-950 flex flex-col h-full">
+        <div className="col-span-2 border-r border-slate-800 bg-slate-950 flex flex-col h-full overflow-hidden">
           <div className="p-4 border-b border-slate-800 bg-void flex justify-between items-center">
             <h2 className="text-sm font-serif text-amber-500 uppercase tracking-widest">Nodes</h2>
             <div className="flex gap-2">
@@ -331,7 +331,7 @@ export default function AdminCMS() {
               </button>
             </div>
           </div>
-          <div className="overflow-y-auto flex-1">
+          <div className="overflow-y-auto flex-1 min-h-0">
             {nodes.map((node) => (
               <div
                 key={node.id}
@@ -356,7 +356,7 @@ export default function AdminCMS() {
         </div>
 
         {/* MIDDLE: Visual Editor */}
-        <div className="col-span-4 border-r border-slate-800 bg-void flex flex-col h-full">
+        <div className="col-span-4 border-r border-slate-800 bg-void flex flex-col h-full overflow-hidden">
           <div className="p-4 border-b border-slate-800 bg-void flex justify-between items-center">
             <div className="flex gap-2">
               <button onClick={() => setActiveTab('core')} className={`px-3 py-1 rounded text-xs font-bold uppercase tracking-wider ${activeTab === 'core' ? 'bg-slate-800 text-amber-500' : 'text-slate-500 hover:text-slate-300'}`}><Layers size={14} className="inline mr-1" /> Core</button>
@@ -370,7 +370,7 @@ export default function AdminCMS() {
             </Button>
           </div>
           
-          <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          <div className="flex-1 overflow-y-auto p-6 space-y-6 min-h-0">
             {selectedNodeId ? (
               <>
                 {/* Global Asset Uploader */}
@@ -609,7 +609,7 @@ export default function AdminCMS() {
         </div>
 
         {/* RIGHT: Live Preview */}
-        <div className="col-span-6 bg-slate-900 relative flex flex-col h-full border-l border-slate-800">
+        <div className="col-span-6 bg-slate-900 relative flex flex-col h-full border-l border-slate-800 overflow-hidden">
           <div className="p-4 border-b border-slate-800 bg-void flex justify-between items-center shadow-md z-10">
             <h2 className="text-sm font-serif text-slate-400 uppercase tracking-widest flex gap-2 items-center">
               <Eye size={14} /> Preview
@@ -626,7 +626,7 @@ export default function AdminCMS() {
             )}
           </div>
 
-          <div className="flex-1 overflow-y-auto bg-[url('/noise.png')] bg-repeat relative">
+          <div className="flex-1 overflow-y-auto bg-[url('/noise.png')] bg-repeat relative min-h-0">
             <div className="absolute inset-0 bg-black/50 pointer-events-none" />
             
             {previewView === 'map' ? (

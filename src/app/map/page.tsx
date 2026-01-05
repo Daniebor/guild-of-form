@@ -145,8 +145,10 @@ export default function MapPage() {
   
   // Canvas State
   const [viewState, setViewState] = useState({ x: 0, y: 0, scale: 1 });
-  const [isDragging, setIsDragging] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  
+  // Interaction State (Ref for performance)
+  const pointers = useRef(new Map<number, { x: number, y: number }>());
 
   const [curriculum, setCurriculum] = useState<Chapter[]>([]);
   const [loadingData, setLoadingData] = useState(true);
@@ -242,13 +244,69 @@ export default function MapPage() {
     setViewState(prev => ({ ...prev, scale: newScale }));
   };
 
+  // --- TOUCH / POINTER LOGIC ---
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    e.currentTarget.setPointerCapture(e.pointerId);
+    pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  };
+
+  const handlePointerUp = (e: React.PointerEvent) => {
+    e.currentTarget.releasePointerCapture(e.pointerId);
+    pointers.current.delete(e.pointerId);
+  };
+
   const handlePointerMove = (e: React.PointerEvent) => {
-    if (!isDragging) return;
-    setViewState(prev => ({
-      ...prev,
-      x: prev.x + e.movementX,
-      y: prev.y + e.movementY
-    }));
+    if (isTrainingOpen) return;
+    
+    const { pointerId, clientX, clientY } = e;
+    const cache = pointers.current;
+    
+    // If this pointer isn't tracked (shouldn't happen if captured), ignore
+    if (!cache.has(pointerId)) return;
+    
+    const prev = cache.get(pointerId)!;
+    
+    // 1. SINGLE POINTER (PAN)
+    if (cache.size === 1) {
+      const dx = clientX - prev.x;
+      const dy = clientY - prev.y;
+      setViewState(prev => ({
+        ...prev,
+        x: prev.x + dx,
+        y: prev.y + dy
+      }));
+    }
+    // 2. TWO POINTERS (PINCH ZOOM)
+    else if (cache.size === 2) {
+      // Find the other pointer
+      let otherPointer = null;
+      // Use Array.from to avoid TS iteration issues
+      for (const [id, p] of Array.from(cache.entries())) {
+        if (id !== pointerId) {
+          otherPointer = p;
+          break;
+        }
+      }
+
+      if (otherPointer) {
+        // Calculate distance between fingers BEFORE this move
+        const distOld = Math.hypot(prev.x - otherPointer.x, prev.y - otherPointer.y);
+        // Calculate distance between fingers AFTER this move
+        const distNew = Math.hypot(clientX - otherPointer.x, clientY - otherPointer.y);
+        
+        if (distOld > 0) {
+          const scaleFactor = distNew / distOld;
+          setViewState(v => ({
+            ...v,
+            scale: Math.max(0.2, Math.min(3, v.scale * scaleFactor))
+          }));
+        }
+      }
+    }
+
+    // Update cache for next frame
+    cache.set(pointerId, { x: clientX, y: clientY });
   };
 
   // --- GAMEPLAY LOGIC ---
@@ -308,11 +366,12 @@ export default function MapPage() {
       {/* --- INFINITE CANVAS --- */}
       <div 
         ref={containerRef}
-        className="absolute inset-0 z-10 cursor-move active:cursor-grabbing"
+        className="absolute inset-0 z-10 touch-none cursor-move active:cursor-grabbing"
         onWheel={handleWheel}
-        onPointerDown={() => setIsDragging(true)}
-        onPointerUp={() => setIsDragging(false)}
-        onPointerLeave={() => setIsDragging(false)}
+        onPointerDown={handlePointerDown}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
+        onPointerLeave={handlePointerUp}
         onPointerMove={handlePointerMove}
       >
         <motion.div
