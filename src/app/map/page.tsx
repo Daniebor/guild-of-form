@@ -95,8 +95,8 @@ const CanvasNode = ({ node, status, onClick }: { node: CurriculumNode, status: N
     <div
       className="absolute flex flex-col items-center gap-2 group"
       style={{ 
-        left: node.position.x, 
-        top: node.position.y,
+        left: -node.position.x, 
+        top: -node.position.y,
         width: size,
         height: size,
         transform: 'translate(-50%, -50%)' // Center anchor
@@ -127,6 +127,11 @@ const CanvasNode = ({ node, status, onClick }: { node: CurriculumNode, status: N
           {isCompleted && <Star size={iconSize} fill="currentColor" />}
         </div>
       </motion.div>
+
+      {/* Debug Coordinates */}
+      <div className="absolute -top-6 text-[10px] text-slate-500 font-mono opacity-70 pointer-events-none whitespace-nowrap">
+        ({node.position.x}, {node.position.y})
+      </div>
 
       <div className={clsx(
         "absolute top-full mt-3 px-3 py-1 bg-void/90 border border-slate-700/50 backdrop-blur-md rounded text-xs font-serif tracking-wide whitespace-nowrap transition-all duration-300 pointer-events-none z-30 shadow-xl",
@@ -422,8 +427,8 @@ export default function MapPage() {
                       return (
                         <line 
                           key={`${reqId}-${node.id}`}
-                          x1={target.position.x} y1={target.position.y}
-                          x2={node.position.x} y2={node.position.y}
+                          x1={-target.position.x} y1={-target.position.y}
+                          x2={-node.position.x} y2={-node.position.y}
                           strokeWidth={2}
                           className={clsx(isUnlocked ? "stroke-amber-500/50" : "stroke-slate-800", "pointer-events-none")}
                           strokeDasharray={isUnlocked ? "0" : "8 8"}
@@ -448,8 +453,8 @@ export default function MapPage() {
                  <div 
                     className="absolute text-slate-700/50 font-serif font-bold text-6xl pointer-events-none whitespace-nowrap z-0"
                     style={{ 
-                        left: chapter.nodes[0].position.x, 
-                        top: chapter.nodes[0].position.y - 100,
+                        left: -chapter.nodes[0].position.x, 
+                        top: -chapter.nodes[0].position.y - 100,
                         transform: 'translate(-50%, -50%)'
                     }}
                  >

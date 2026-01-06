@@ -11,8 +11,6 @@ import {
 import { RuneTablet } from "@/components/lesson/RuneTablet";
 import { MediaFrame } from "@/components/lesson/MediaFrame";
 import { HoldButton } from "@/components/lesson/HoldButton";
-import { MapNode } from "@/components/map/MapNode";
-import { MapConnector } from "@/components/map/MapConnector";
 import { NodeType } from "@/lib/types";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -28,7 +26,6 @@ export default function AdminCMS() {
   
   // Preview Modes
   const [previewMode, setPreviewMode] = useState<'mobile' | 'desktop'>('desktop');
-  const [previewView, setPreviewView] = useState<'lesson' | 'map'>('lesson');
   
   const [activeTab, setActiveTab] = useState<'core' | 'steps' | 'drills'>('core');
 
@@ -282,28 +279,6 @@ export default function AdminCMS() {
     }
   };
 
-  // --- MAP PREVIEW HELPERS ---
-  
-  const handleMapClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (previewView !== 'map') return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
-    updatePosition('x', Math.round(x));
-    updatePosition('y', Math.round(y));
-  };
-
-  const findNodeCoords = (id: string) => {
-    // Check nodes in DB
-    const dbNode = nodes.find(n => n.id === id);
-    if (dbNode) return dbNode.data.position;
-    
-    // Check currently editing node (if it refers to itself, though that shouldn't happen for requires)
-    if (editId === id) return formData.position;
-
-    return null;
-  };
-
   const previewData = useMemo(() => {
     return { ...formData, title: editTitle };
   }, [formData, editTitle]);
@@ -447,11 +422,11 @@ export default function AdminCMS() {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="text-[10px] uppercase text-slate-500 block mb-1">Map X (%)</label>
+                        <label className="text-[10px] uppercase text-slate-500 block mb-1">Map X</label>
                         <input type="number" value={formData.position?.x} onChange={e => updatePosition('x', Number(e.target.value))} className="w-full bg-slate-900 border border-slate-700 p-2 rounded text-slate-300 text-sm" />
                       </div>
                       <div>
-                        <label className="text-[10px] uppercase text-slate-500 block mb-1">Map Y (%)</label>
+                        <label className="text-[10px] uppercase text-slate-500 block mb-1">Map Y</label>
                         <input type="number" value={formData.position?.y} onChange={e => updatePosition('y', Number(e.target.value))} className="w-full bg-slate-900 border border-slate-700 p-2 rounded text-slate-300 text-sm" />
                       </div>
                     </div>
@@ -615,172 +590,97 @@ export default function AdminCMS() {
               <Eye size={14} /> Preview
             </h2>
             <div className="flex gap-2 bg-slate-800 rounded p-1">
-              <button onClick={() => setPreviewView('lesson')} className={`px-2 py-1 text-xs rounded ${previewView === 'lesson' ? 'bg-slate-600 text-white' : 'text-slate-400'}`}>Lesson</button>
-              <button onClick={() => setPreviewView('map')} className={`px-2 py-1 text-xs rounded ${previewView === 'map' ? 'bg-slate-600 text-white' : 'text-slate-400'}`}>Map</button>
+              <button onClick={() => setPreviewMode('desktop')} className={`p-1 rounded ${previewMode === 'desktop' ? 'bg-slate-600 text-white' : 'text-slate-400'}`}><div className="w-4 h-3 border border-current rounded-sm" /></button>
+              <button onClick={() => setPreviewMode('mobile')} className={`p-1 rounded ${previewMode === 'mobile' ? 'bg-slate-600 text-white' : 'text-slate-400'}`}><Smartphone size={14} /></button>
             </div>
-            {previewView === 'lesson' && (
-              <div className="flex gap-2 bg-slate-800 rounded p-1 ml-2">
-                <button onClick={() => setPreviewMode('desktop')} className={`p-1 rounded ${previewMode === 'desktop' ? 'bg-slate-600 text-white' : 'text-slate-400'}`}><div className="w-4 h-3 border border-current rounded-sm" /></button>
-                <button onClick={() => setPreviewMode('mobile')} className={`p-1 rounded ${previewMode === 'mobile' ? 'bg-slate-600 text-white' : 'text-slate-400'}`}><Smartphone size={14} /></button>
-              </div>
-            )}
           </div>
 
           <div className="flex-1 overflow-y-auto bg-[url('/noise.png')] bg-repeat relative min-h-0">
             <div className="absolute inset-0 bg-black/50 pointer-events-none" />
             
-            {previewView === 'map' ? (
-              // --- MAP PREVIEW MODE ---
-              <div 
-                className="relative w-full h-[200%] bg-void cursor-crosshair overflow-hidden"
-                onClick={handleMapClick}
-              >
-                 {/* 1. Grid Background for Reference */}
-                 <div className="absolute inset-0 opacity-10 pointer-events-none" 
-                      style={{ backgroundImage: 'linear-gradient(#334155 1px, transparent 1px), linear-gradient(90deg, #334155 1px, transparent 1px)', backgroundSize: '5% 5%' }} 
-                 />
-
-                 <div className="absolute top-4 left-4 z-50 bg-slate-900/80 p-2 rounded border border-slate-700 pointer-events-none text-xs text-slate-400">
-                    <p><MousePointerClick size={12} className="inline mr-1"/> Click anywhere to set position</p>
-                    <p className="mt-1 font-mono text-amber-500">X: {formData.position?.x}%  Y: {formData.position?.y}%</p>
-                 </div>
-
-                 {/* 2. Connectors Layer */}
-                 <svg className="absolute inset-0 w-full h-full pointer-events-none z-0">
-                    {/* Existing Nodes Connectors */}
-                    {nodes.map(node => {
-                       if (!node.data.requires || node.data.requires.length === 0) return null;
-                       return node.data.requires.map((reqId: string) => {
-                         const reqCoords = findNodeCoords(reqId);
-                         if (!reqCoords) return null;
-                         return (
-                           <MapConnector
-                             key={`${reqId}-${node.id}`}
-                             startX={reqCoords.x}
-                             startY={reqCoords.y}
-                             endX={node.data.position.x}
-                             endY={node.data.position.y}
-                             status="unlocked"
-                           />
-                         );
-                       });
-                    })}
-                    
-                    {/* Ghost Node Connectors (Incoming) */}
-                    {(formData.requires || []).map((reqId: string) => {
-                       const reqCoords = findNodeCoords(reqId);
-                       if (!reqCoords) return null;
-                       return (
-                         <MapConnector
-                           key={`ghost-req-${reqId}`}
-                           startX={reqCoords.x}
-                           startY={reqCoords.y}
-                           endX={formData.position.x}
-                           endY={formData.position.y}
-                           status="locked" // Dashed line for preview
-                         />
-                       );
-                    })}
-                 </svg>
-
-                 {/* 3. Existing Nodes */}
-                 {nodes.map((node) => {
-                    // Don't render the node we are editing (we render the live ghost instead)
-                    if (node.id === editId) return null; 
-
-                    return (
-                      <div key={node.id} className="opacity-50 grayscale hover:grayscale-0 hover:opacity-100 transition-all">
-                        <MapNode
-                          id={node.id}
-                          type={node.data.type}
-                          title={node.title}
-                          x={node.data.position.x}
-                          y={node.data.position.y}
-                          status="completed" // Show all as completed/visible for context
-                          onClick={() => handleSelect(node)} // Allow selecting other nodes from map
-                        />
-                      </div>
-                    );
-                 })}
-
-                 {/* 4. Ghost Node (Current Edit) */}
-                 <div className="animate-pulse">
-                    <MapNode
-                      id={editId || "new"}
-                      type={formData.type as NodeType}
-                      title={editTitle || "New Node"}
-                      x={formData.position.x}
-                      y={formData.position.y}
-                      status="active"
-                      onClick={() => {}}
-                    />
-                 </div>
-              </div>
-            ) : (
-              // --- LESSON PREVIEW MODE ---
-              <div className={`relative mx-auto transition-all duration-300 ${previewMode === 'mobile' ? 'w-[375px] my-8 border-x-8 border-y-[40px] border-slate-800 rounded-[3rem] shadow-2xl bg-void overflow-hidden min-h-[800px]' : 'w-full min-h-full bg-void'}`}>
-                
-                {/* RuneTablet Position Logic */}
-                {previewMode === 'mobile' ? (
+            {/* --- LESSON PREVIEW MODE --- */}
+            <div className={`relative mx-auto transition-all duration-300 ${previewMode === 'mobile' ? 'w-[375px] my-8 border-x-8 border-y-[40px] border-slate-800 rounded-[3rem] shadow-2xl bg-void overflow-hidden min-h-[800px]' : 'w-full min-h-full bg-void'}`}>
+              
+              {previewMode === 'mobile' ? (
+                <>
                   <div className="absolute top-0 w-full z-10">
                     <RuneTablet hotkeys={previewData.hotkeys || []} />
                   </div>
-                ) : (
-                  <RuneTablet hotkeys={previewData.hotkeys || []} topClass="top-0" />
-                )}
+                  <div className="px-6 pt-20 pb-20 overflow-y-auto h-full">
+                    <LessonPreviewContent previewData={previewData} />
+                  </div>
+                </>
+              ) : (
+                <main className="max-w-7xl mx-auto px-6 pt-12 grid grid-cols-1 lg:grid-cols-12 gap-12 h-full overflow-y-auto min-h-0">
+                  {/* Sidebar */}
+                  <aside className="lg:col-span-3 lg:col-start-1 h-fit sticky top-0 space-y-8">
+                    <div className="inline-flex items-center text-slate-500 hover:text-amber transition-colors">
+                      <ArrowDown size={16} className="mr-1 rotate-90" /> Return to Map
+                    </div>
+                    <RuneTablet hotkeys={previewData.hotkeys || []} orientation="vertical" />
+                  </aside>
 
-                <div className={`px-6 pb-20 ${previewMode === 'mobile' ? 'pt-20 overflow-y-auto h-full' : 'pt-8'}`}>
-                  <div className="mb-8 border-b border-slate-800 pb-6">
-                    <span className="text-amber-500 text-xs font-mono tracking-widest block mb-2">XP REWARD: {previewData.xpReward}</span>
-                    <h1 className="text-3xl md:text-4xl font-serif font-bold text-slate-100 mb-4">{previewData.title}</h1>
-                    <div className="text-lg text-slate-400 font-light leading-relaxed">
-                      <ReactMarkdown 
-                        remarkPlugins={[remarkGfm]}
-                        components={{
-                          strong: ({node, ...props}) => <span className="text-amber-400 font-bold" {...props} />,
-                        }}
-                      >
-                        {previewData.description}
-                      </ReactMarkdown>
+                  {/* Content */}
+                  <div className="lg:col-span-8">
+                    <LessonPreviewContent previewData={previewData} />
+                    <div className="mt-16 pt-8 border-t border-slate-800 text-center">
+                      <p className="text-slate-500 font-serif italic mb-6 text-sm">"Is the Trial complete?"</p>
+                      <HoldButton onSuccess={() => {}} label="Hold to Complete" />
                     </div>
                   </div>
+                </main>
+              )}
 
-                  <div className="space-y-12">
-                    {previewData.steps?.map((step: any, index: number) => (
-                      <div key={index} className="relative pl-6 border-l-2 border-slate-800">
-                        <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-void border-2 border-slate-700" />
-                        <h2 className="text-xl font-serif text-amber-500 mb-2">{step.title}</h2>
-                        <div className="prose prose-invert prose-sm text-slate-300">
-                          <ReactMarkdown 
-                            remarkPlugins={[remarkGfm]}
-                            components={{
-                              strong: ({node, ...props}) => <span className="text-amber-400 font-bold" {...props} />,
-                              a: ({node, ...props}) => <a className="text-amber-500 hover:text-amber-400 underline" target="_blank" rel="noopener noreferrer" {...props} />,
-                              code: ({node, ...props}) => <code className="bg-slate-800 px-1 py-0.5 rounded text-amber-200 font-mono text-sm" {...props} />,
-                              ul: ({node, ...props}) => <ul className="list-disc pl-4 space-y-1" {...props} />,
-                              ol: ({node, ...props}) => <ol className="list-decimal pl-4 space-y-1" {...props} />,
-                            }}
-                          >
-                            {step.description}
-                          </ReactMarkdown>
-                        </div>
-                        {step.media && <MediaFrame src={step.media} title={step.title} />}
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="mt-16 pt-8 border-t border-slate-800 text-center">
-                    <p className="text-slate-500 font-serif italic mb-6 text-sm">"Is the Trial complete?"</p>
-                    <HoldButton onSuccess={() => {}} label="Hold to Complete" />
-                  </div>
-                </div>
-
-              </div>
-            )}
+            </div>
           </div>
         </div>
 
       </main>
     </div>
+  );
+}
+
+function LessonPreviewContent({ previewData }: { previewData: any }) {
+  return (
+    <>
+      <div className="mb-8 border-b border-slate-800 pb-6">
+        <span className="text-amber-500 text-xs font-mono tracking-widest block mb-2 uppercase">XP REWARD: {previewData.xpReward}</span>
+        <h1 className="text-3xl md:text-4xl font-serif font-bold text-slate-100 mb-4">{previewData.title}</h1>
+        <div className="text-lg text-slate-400 font-light leading-relaxed">
+          <ReactMarkdown 
+            remarkPlugins={[remarkGfm]}
+            components={{
+              strong: ({node, ...props}) => <span className="text-amber-400 font-bold" {...props} />,
+            }}
+          >
+            {previewData.description}
+          </ReactMarkdown>
+        </div>
+      </div>
+
+      <div className="space-y-12">
+        {previewData.steps?.map((step: any, index: number) => (
+          <div key={index} className="relative pl-6 border-l-2 border-slate-800">
+            <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-void border-2 border-slate-700" />
+            <h2 className="text-xl font-serif text-amber-500 mb-2">{step.title}</h2>
+            <div className="prose prose-invert prose-sm text-slate-300">
+              <ReactMarkdown 
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  strong: ({node, ...props}) => <span className="text-amber-400 font-bold" {...props} />,
+                  a: ({node, ...props}) => <a className="text-amber-500 hover:text-amber-400 underline" target="_blank" rel="noopener noreferrer" {...props} />,
+                  code: ({node, ...props}) => <code className="bg-slate-800 px-1 py-0.5 rounded text-amber-200 font-mono text-sm" {...props} />,
+                  ul: ({node, ...props}) => <ul className="list-disc pl-4 space-y-1" {...props} />,
+                  ol: ({node, ...props}) => <ol className="list-decimal pl-4 space-y-1" {...props} />,
+                }}
+              >
+                {step.description}
+              </ReactMarkdown>
+            </div>
+            {step.media && <MediaFrame src={step.media} title={step.title} />}
+          </div>
+        ))}
+      </div>
+    </>
   );
 }

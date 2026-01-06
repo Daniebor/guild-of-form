@@ -3,10 +3,9 @@ import { clsx } from "clsx";
 interface RuneTabletProps {
   hotkeys: string[];
   orientation?: "horizontal" | "vertical";
-  topClass?: string;
 }
 
-export const RuneTablet = ({ hotkeys, orientation = "horizontal", topClass = "top-16" }: RuneTabletProps) => {
+export const RuneTablet = ({ hotkeys, orientation = "horizontal" }: RuneTabletProps) => {
   if (!hotkeys || hotkeys.length === 0) return null;
 
   if (orientation === "vertical") {
@@ -31,11 +30,12 @@ export const RuneTablet = ({ hotkeys, orientation = "horizontal", topClass = "to
     );
   }
 
+  // Horizontal Layout (Mobile / Top Bar)
   return (
-    <div className={clsx("sticky z-40 w-full bg-void/95 border-b border-amber-900/30 backdrop-blur-sm", topClass)}>
+    <div className="sticky top-16 z-40 w-full bg-void/95 border-b border-amber-900/30 backdrop-blur-sm">
       <div className="max-w-2xl mx-auto px-6 py-3 flex items-center gap-4 overflow-x-auto no-scrollbar">
         <span className="text-xs font-serif text-slate-500 uppercase tracking-widest shrink-0">
-          Runes Required:
+          Runes:
         </span>
         <div className="flex gap-3">
           {hotkeys.map((key, index) => (

@@ -11,8 +11,27 @@ import { ChevronLeft, Map as MapIcon, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { CurriculumNode } from "@/lib/types";
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
+
+// Helper to render **Bold** text
+const FormattedText = ({ text }: { text: string }) => {
+  if (!text) return null;
+  const parts = text.split(/(\*\*.*?\*\*)/g);
+  
+  return (
+    <>
+      {parts.map((part, index) => {
+        if (part.startsWith('**') && part.endsWith('**')) {
+          return (
+            <strong key={index} className="text-amber-400 font-bold">
+              {part.slice(2, -2)}
+            </strong>
+          );
+        }
+        return <span key={index}>{part}</span>;
+      })}
+    </>
+  );
+};
 
 export default function LessonPage() {
   const params = useParams();
@@ -20,7 +39,6 @@ export default function LessonPage() {
   const { completeNode, completedNodes } = useUserStore();
   const [mounted, setMounted] = useState(false);
   
-  // Dynamic Data State
   const [node, setNode] = useState<CurriculumNode | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -33,7 +51,6 @@ export default function LessonPage() {
     setMounted(true);
   }, []);
 
-  // --- DATA FETCHING (DB) ---
   useEffect(() => {
     const fetchLesson = async () => {
       setLoading(true);
@@ -50,12 +67,10 @@ export default function LessonPage() {
       }
 
       if (data) {
-        // Transform DB row to CurriculumNode
         const loadedNode: CurriculumNode = {
           id: data.id,
           title: data.title,
           type: data.type,
-          // Spread the JSON payload
           description: data.data.description,
           position: data.data.position,
           xpReward: data.data.xpReward,
@@ -109,6 +124,7 @@ export default function LessonPage() {
         <RuneTablet hotkeys={node.hotkeys || []} orientation="horizontal" />
       </div>
 
+      {/* Floating Map Return Button (Fixed Bottom Right) */}
       <Link 
         href="/map"
         className="fixed bottom-8 right-8 z-50 flex items-center justify-center w-14 h-14 bg-slate-900 border-2 border-amber-500/30 rounded-full text-amber-500 shadow-[0_0_20px_rgba(0,0,0,0.5)] hover:scale-110 hover:border-amber-500 hover:shadow-[0_0_30px_rgba(245,158,11,0.4)] transition-all duration-300 group"
@@ -117,6 +133,7 @@ export default function LessonPage() {
         <MapIcon size={24} />
       </Link>
 
+      {/* Main Grid Layout */}
       <main className="max-w-7xl mx-auto px-6 pt-12 grid grid-cols-1 lg:grid-cols-12 gap-12">
         
         {/* DESKTOP SIDEBAR: Navigation & Runes */}
@@ -139,62 +156,46 @@ export default function LessonPage() {
             </div>
 
             <header className="mb-12 border-b border-slate-800 pb-8">
-              <div className="flex items-center gap-3 mb-4">
+            <div className="flex items-center gap-3 mb-4">
                 <span className="px-3 py-1 rounded-full bg-slate-900 border border-slate-700 text-xs font-mono text-slate-400">
-                  {chapterId.replace('-', ' ').toUpperCase()}
+                {chapterId.replace('-', ' ').toUpperCase()}
                 </span>
                 <span className="text-amber text-xs font-mono tracking-widest">
-                  XP REWARD: {node.xpReward}
+                XP REWARD: {node.xpReward}
                 </span>
-              </div>
-              <h1 className="text-4xl md:text-5xl font-serif font-bold text-slate-100 mb-4">
+            </div>
+            <h1 className="text-4xl md:text-5xl font-serif font-bold text-slate-100 mb-4">
                 {node.title}
-              </h1>
-              <div className="text-xl text-slate-400 font-light leading-relaxed">
-                <ReactMarkdown 
-                  remarkPlugins={[remarkGfm]}
-                  components={{
-                    strong: ({node, ...props}) => <span className="text-amber-400 font-bold" {...props} />,
-                  }}
-                >
-                  {node.description}
-                </ReactMarkdown>
-              </div>
+            </h1>
+            <p className="text-xl text-slate-400 font-light leading-relaxed">
+                {node.description}
+            </p>
             </header>
 
             <div className="space-y-12">
-              {node.steps?.map((step, index) => (
+            {node.steps?.map((step, index) => (
                 <div key={index} className="relative pl-8 border-l-2 border-slate-800 hover:border-amber-900/50 transition-colors">
-                  <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-void border-2 border-slate-700" />
-                  
-                  <h2 className="text-2xl font-serif text-amber-500 mb-3">
+                <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-void border-2 border-slate-700" />
+                
+                <h2 className="text-2xl font-serif text-amber-500 mb-3">
                     {step.title}
-                  </h2>
-                  
-                  <div className="prose prose-invert prose-lg text-slate-300">
-                    <ReactMarkdown 
-                      remarkPlugins={[remarkGfm]}
-                      components={{
-                        strong: ({node, ...props}) => <span className="text-amber-400 font-bold" {...props} />,
-                        a: ({node, ...props}) => <a className="text-amber-500 hover:text-amber-400 underline" target="_blank" rel="noopener noreferrer" {...props} />,
-                        code: ({node, ...props}) => <code className="bg-slate-800 px-1 py-0.5 rounded text-amber-200 font-mono text-sm" {...props} />,
-                        ul: ({node, ...props}) => <ul className="list-disc pl-4 space-y-1" {...props} />,
-                        ol: ({node, ...props}) => <ol className="list-decimal pl-4 space-y-1" {...props} />,
-                      }}
-                    >
-                      {step.description}
-                    </ReactMarkdown>
-                  </div>
-
-                  <MediaFrame src={step.media} title={step.title} />
+                </h2>
+                
+                <div className="prose prose-invert prose-lg text-slate-300">
+                    <p>
+                    <FormattedText text={step.description} />
+                    </p>
                 </div>
-              ))}
+
+                <MediaFrame src={step.media} title={step.title} />
+                </div>
+            ))}
             </div>
 
             <div className="mt-20 pt-10 border-t border-slate-800">
-              <div className="max-w-md mx-auto text-center space-y-6">
+            <div className="max-w-md mx-auto text-center space-y-6">
                 <p className="text-slate-500 font-serif italic">
-                  "Is the Trial complete?"
+                "Is the Trial complete?"
                 </p>
                 
                 <HoldButton 
@@ -202,7 +203,7 @@ export default function LessonPage() {
                     completed={isCompleted}
                     label="Hold to Complete"
                 />
-              </div>
+            </div>
             </div>
         </div>
 
