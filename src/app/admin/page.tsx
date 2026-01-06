@@ -720,11 +720,16 @@ export default function AdminCMS() {
               // --- LESSON PREVIEW MODE ---
               <div className={`relative mx-auto transition-all duration-300 ${previewMode === 'mobile' ? 'w-[375px] my-8 border-x-8 border-y-[40px] border-slate-800 rounded-[3rem] shadow-2xl bg-void overflow-hidden min-h-[800px]' : 'w-full min-h-full bg-void'}`}>
                 
-                <div className="absolute top-0 w-full z-10">
-                  <RuneTablet hotkeys={previewData.hotkeys || []} />
-                </div>
+                {/* RuneTablet Position Logic */}
+                {previewMode === 'mobile' ? (
+                  <div className="absolute top-0 w-full z-10">
+                    <RuneTablet hotkeys={previewData.hotkeys || []} />
+                  </div>
+                ) : (
+                  <RuneTablet hotkeys={previewData.hotkeys || []} topClass="top-0" />
+                )}
 
-                <div className={`px-6 pt-20 pb-20 ${previewMode === 'mobile' ? 'overflow-y-auto h-full' : ''}`}>
+                <div className={`px-6 pb-20 ${previewMode === 'mobile' ? 'pt-20 overflow-y-auto h-full' : 'pt-8'}`}>
                   <div className="mb-8 border-b border-slate-800 pb-6">
                     <span className="text-amber-500 text-xs font-mono tracking-widest block mb-2">XP REWARD: {previewData.xpReward}</span>
                     <h1 className="text-3xl md:text-4xl font-serif font-bold text-slate-100 mb-4">{previewData.title}</h1>
