@@ -149,6 +149,7 @@ export default function MapPage() {
   
   // Interaction State (Ref for performance)
   const pointers = useRef(new Map<number, { x: number, y: number }>());
+  const isDragging = useRef(false);
 
   const [curriculum, setCurriculum] = useState<Chapter[]>([]);
   const [loadingData, setLoadingData] = useState(true);
@@ -260,12 +261,13 @@ export default function MapPage() {
   };
 
   const handlePointerDown = (e: React.PointerEvent) => {
-    e.currentTarget.setPointerCapture(e.pointerId);
+    // We removed setPointerCapture to allow events to bubble from children (nodes)
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    isDragging.current = false;
   };
 
   const handlePointerUp = (e: React.PointerEvent) => {
-    e.currentTarget.releasePointerCapture(e.pointerId);
+    // We removed releasePointerCapture
     pointers.current.delete(e.pointerId);
   };
 
@@ -291,6 +293,12 @@ export default function MapPage() {
     const currCentroid = getCentroid(currPoints);
     const currDist = getDistance(currPoints);
 
+    // Check for significant movement to flag as drag
+    if (!isDragging.current) {
+       const moveDist = Math.hypot(currCentroid.x - prevCentroid.x, currCentroid.y - prevCentroid.y);
+       if (moveDist > 2) isDragging.current = true;
+    }
+
     // 4. Calculate Transforms
     setViewState(prevView => {
        let newScale = prevView.scale;
@@ -299,6 +307,7 @@ export default function MapPage() {
        if (currPoints.length >= 2 && prevDist > 0) {
           const scaleFactor = currDist / prevDist;
           newScale = Math.max(0.2, Math.min(3, prevView.scale * scaleFactor));
+          if (Math.abs(newScale - prevView.scale) > 0.001) isDragging.current = true;
        }
 
        // Calculate Pan Change (Movement of the centroid + Compensation for zoom origin)
@@ -328,6 +337,7 @@ export default function MapPage() {
   };
 
   const handleNodeClick = (nodeId: string, type: string, status: NodeStatus, requiredXP?: number) => {
+    if (isDragging.current) return;
     if (status === "locked") return;
     
     if (type === "boss") {
