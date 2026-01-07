@@ -7,7 +7,7 @@ import { ForgeHeader } from "@/components/layout/ForgeHeader";
 import { RuneTablet } from "@/components/lesson/RuneTablet";
 import { HoldButton } from "@/components/lesson/HoldButton";
 import { MediaFrame } from "@/components/lesson/MediaFrame";
-import { ChevronLeft, Map as MapIcon, Loader2 } from "lucide-react";
+import { ChevronLeft, Map as MapIcon, Loader2, AlertTriangle, Dumbbell } from "lucide-react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { CurriculumNode } from "@/lib/types";
@@ -63,6 +63,8 @@ export default function LessonPage() {
           requires: data.data.requires,
           hotkeys: data.data.hotkeys,
           steps: data.data.steps,
+          pitfalls: data.data.pitfalls,
+          practice: data.data.practice,
           drills: data.data.drills
         };
         setNode(loadedNode);
@@ -189,6 +191,46 @@ export default function LessonPage() {
                   <MediaFrame src={step.media} title={step.title} />
                 </div>
               ))}
+
+              {/* Pitfalls Section */}
+              {node.pitfalls && node.pitfalls.length > 0 && (
+                <div className="mt-16">
+                  <h3 className="flex items-center gap-2 text-xl font-serif text-red-400 mb-6 border-b border-red-900/30 pb-2">
+                    <AlertTriangle size={20} /> Common Pitfalls
+                  </h3>
+                  <div className="space-y-6">
+                    {node.pitfalls.map((pitfall, index) => (
+                      <div key={index} className="bg-red-950/10 border border-red-900/30 rounded-lg p-6">
+                        <h4 className="text-lg font-serif text-red-300 mb-2">{pitfall.title}</h4>
+                        <div className="prose prose-invert prose-sm text-slate-400">
+                          <ReactMarkdown>{pitfall.description}</ReactMarkdown>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Practice Section */}
+              {node.practice && node.practice.length > 0 && (
+                <div className="mt-16">
+                  <h3 className="flex items-center gap-2 text-xl font-serif text-emerald-400 mb-6 border-b border-emerald-900/30 pb-2">
+                    <Dumbbell size={20} /> Practice Rituals
+                  </h3>
+                  <div className="space-y-8">
+                    {node.practice.map((practice, index) => (
+                      <div key={index} className="relative pl-8 border-l-2 border-emerald-900/50">
+                        <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-void border-2 border-emerald-700" />
+                        <h4 className="text-lg font-serif text-emerald-300 mb-2">{practice.title}</h4>
+                        <div className="prose prose-invert prose-sm text-slate-300">
+                          <ReactMarkdown>{practice.description}</ReactMarkdown>
+                        </div>
+                        <MediaFrame src={practice.media} title={practice.title} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="mt-20 pt-10 border-t border-slate-800">

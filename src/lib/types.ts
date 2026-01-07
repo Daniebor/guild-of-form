@@ -7,6 +7,17 @@ export interface LessonStep {
   media?: string;
 }
 
+export interface Pitfall {
+  title: string;
+  description: string;
+}
+
+export interface PracticeItem {
+  title: string;
+  description: string;
+  media?: string;
+}
+
 export interface Drill {
   id: number | string;
   title: string;
@@ -28,6 +39,8 @@ export interface CurriculumNode {
   requires?: string[];
   hotkeys?: string[]; 
   steps?: LessonStep[];
+  pitfalls?: Pitfall[];
+  practice?: PracticeItem[];
   drills?: Drill[];
 }
 

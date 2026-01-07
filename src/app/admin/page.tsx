@@ -4,9 +4,9 @@ import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
 import { ForgeHeader } from "@/components/layout/ForgeHeader";
 import { Button } from "@/components/ui/Button";
-import { 
+import {
   Save, RefreshCw, Eye, Code, Smartphone, Upload, Loader2, Copy, 
-  Plus, Trash2, ArrowUp, ArrowDown, Layers, List, Hammer, FilePlus, X, Map as MapIcon, MousePointerClick
+  Plus, Trash2, ArrowUp, ArrowDown, Layers, List, Hammer, FilePlus, X, AlertTriangle, Dumbbell
 } from "lucide-react";
 import { RuneTablet } from "@/components/lesson/RuneTablet";
 import { MediaFrame } from "@/components/lesson/MediaFrame";
@@ -27,7 +27,7 @@ export default function AdminCMS() {
   // Preview Modes
   const [previewMode, setPreviewMode] = useState<'mobile' | 'desktop'>('desktop');
   
-  const [activeTab, setActiveTab] = useState<'core' | 'steps' | 'drills'>('core');
+  const [activeTab, setActiveTab] = useState<'core' | 'steps' | 'pitfalls' | 'practice' | 'drills'>('core');
 
   // Core Identity State
   const [editId, setEditId] = useState("");
@@ -44,6 +44,8 @@ export default function AdminCMS() {
     requires: [],
     hotkeys: [],
     steps: [],
+    pitfalls: [],
+    practice: [],
     drills: []
   });
 
@@ -89,6 +91,8 @@ export default function AdminCMS() {
       requires: node.data.requires || [],
       hotkeys: node.data.hotkeys || [],
       steps: node.data.steps || [],
+      pitfalls: node.data.pitfalls || [],
+      practice: node.data.practice || [],
       drills: node.data.drills || []
     });
     setUploadedUrl(null);
@@ -108,11 +112,12 @@ export default function AdminCMS() {
       requires: [],
       hotkeys: [],
       steps: [],
+      pitfalls: [],
+      practice: [],
       drills: []
     });
     setUploadedUrl(null);
   };
-
   const handleDelete = async (id: string, event: React.MouseEvent) => {
     event.stopPropagation(); // Prevent selection when clicking delete
     if (!confirm(`Are you sure you want to delete node "${id}"? This cannot be undone.`)) return;
@@ -336,6 +341,8 @@ export default function AdminCMS() {
             <div className="flex gap-2">
               <button onClick={() => setActiveTab('core')} className={`px-3 py-1 rounded text-xs font-bold uppercase tracking-wider ${activeTab === 'core' ? 'bg-slate-800 text-amber-500' : 'text-slate-500 hover:text-slate-300'}`}><Layers size={14} className="inline mr-1" /> Core</button>
               <button onClick={() => setActiveTab('steps')} className={`px-3 py-1 rounded text-xs font-bold uppercase tracking-wider ${activeTab === 'steps' ? 'bg-slate-800 text-amber-500' : 'text-slate-500 hover:text-slate-300'}`}><List size={14} className="inline mr-1" /> Steps</button>
+              <button onClick={() => setActiveTab('pitfalls')} className={`px-3 py-1 rounded text-xs font-bold uppercase tracking-wider ${activeTab === 'pitfalls' ? 'bg-slate-800 text-amber-500' : 'text-slate-500 hover:text-slate-300'}`}><AlertTriangle size={14} className="inline mr-1" /> Pitfalls</button>
+              <button onClick={() => setActiveTab('practice')} className={`px-3 py-1 rounded text-xs font-bold uppercase tracking-wider ${activeTab === 'practice' ? 'bg-slate-800 text-amber-500' : 'text-slate-500 hover:text-slate-300'}`}><Dumbbell size={14} className="inline mr-1" /> Practice</button>
               {formData.type === 'boss' && (
                 <button onClick={() => setActiveTab('drills')} className={`px-3 py-1 rounded text-xs font-bold uppercase tracking-wider ${activeTab === 'drills' ? 'bg-slate-800 text-amber-500' : 'text-slate-500 hover:text-slate-300'}`}><Hammer size={14} className="inline mr-1" /> Drills</button>
               )}
@@ -516,6 +523,82 @@ export default function AdminCMS() {
                   </div>
                 )}
 
+                {/* --- TAB: PITFALLS --- */}
+                {activeTab === 'pitfalls' && (
+                  <div className="space-y-4">
+                    <Button onClick={() => addListItem('pitfalls', { title: "New Pitfall", description: "" })} size="sm" variant="ghost" className="w-full border-dashed border-slate-700 text-slate-500 hover:text-red-400 hover:border-red-900/50">
+                      <Plus size={14} className="mr-2"/> Add Pitfall
+                    </Button>
+                    
+                    {formData.pitfalls?.map((pitfall: any, idx: number) => (
+                      <div key={idx} className="bg-red-950/10 border border-red-900/30 p-4 rounded-lg group relative">
+                        <div className="absolute right-2 top-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button onClick={() => moveListItem('pitfalls', idx, -1)} className="p-1 text-slate-500 hover:text-white"><ArrowUp size={14}/></button>
+                          <button onClick={() => moveListItem('pitfalls', idx, 1)} className="p-1 text-slate-500 hover:text-white"><ArrowDown size={14}/></button>
+                          <button onClick={() => removeListItem('pitfalls', idx)} className="p-1 text-slate-500 hover:text-red-400"><Trash2 size={14}/></button>
+                        </div>
+                        
+                        <div className="space-y-3">
+                          <input 
+                            value={pitfall.title} 
+                            onChange={e => updateListItem('pitfalls', idx, 'title', e.target.value)}
+                            className="w-full bg-transparent border-b border-red-900/30 pb-1 text-red-200 font-serif focus:border-red-500 outline-none placeholder:text-red-900/50" 
+                            placeholder="Pitfall Title"
+                          />
+                          <textarea 
+                            value={pitfall.description} 
+                            onChange={e => updateListItem('pitfalls', idx, 'description', e.target.value)}
+                            className="w-full bg-slate-950/50 border border-red-900/30 p-2 rounded text-xs text-slate-300 h-20 focus:border-red-500 outline-none"
+                            placeholder="Description..."
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* --- TAB: PRACTICE --- */}
+                {activeTab === 'practice' && (
+                  <div className="space-y-4">
+                    <Button onClick={() => addListItem('practice', { title: "New Practice", description: "" })} size="sm" variant="ghost" className="w-full border-dashed border-slate-700 text-slate-500 hover:text-emerald-400 hover:border-emerald-900/50">
+                      <Plus size={14} className="mr-2"/> Add Practice
+                    </Button>
+                    
+                    {formData.practice?.map((item: any, idx: number) => (
+                      <div key={idx} className="bg-emerald-950/10 border border-emerald-900/30 p-4 rounded-lg group relative">
+                        <div className="absolute right-2 top-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button onClick={() => moveListItem('practice', idx, -1)} className="p-1 text-slate-500 hover:text-white"><ArrowUp size={14}/></button>
+                          <button onClick={() => moveListItem('practice', idx, 1)} className="p-1 text-slate-500 hover:text-white"><ArrowDown size={14}/></button>
+                          <button onClick={() => removeListItem('practice', idx)} className="p-1 text-slate-500 hover:text-red-400"><Trash2 size={14}/></button>
+                        </div>
+                        
+                        <div className="space-y-3">
+                          <input 
+                            value={item.title} 
+                            onChange={e => updateListItem('practice', idx, 'title', e.target.value)}
+                            className="w-full bg-transparent border-b border-emerald-900/30 pb-1 text-emerald-200 font-serif focus:border-emerald-500 outline-none placeholder:text-emerald-900/50" 
+                            placeholder="Practice Title"
+                          />
+                          <textarea 
+                            value={item.description} 
+                            onChange={e => updateListItem('practice', idx, 'description', e.target.value)}
+                            className="w-full bg-slate-950/50 border border-emerald-900/30 p-2 rounded text-xs text-slate-300 h-20 focus:border-emerald-500 outline-none"
+                            placeholder="Description..."
+                          />
+                          <div>
+                            <input 
+                              value={item.media || ''} 
+                              onChange={e => updateListItem('practice', idx, 'media', e.target.value)}
+                              className="w-full bg-slate-950/30 border border-emerald-900/30 p-2 rounded text-[10px] font-mono text-slate-400 focus:text-white focus:border-emerald-500 outline-none"
+                              placeholder="/images/example.gif or https://..."
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
                 {/* --- TAB: DRILLS --- */}
                 {activeTab === 'drills' && (
                   <div className="space-y-4">
@@ -680,6 +763,46 @@ function LessonPreviewContent({ previewData }: { previewData: any }) {
             {step.media && <MediaFrame src={step.media} title={step.title} />}
           </div>
         ))}
+
+        {/* Pitfalls Section */}
+        {previewData.pitfalls && previewData.pitfalls.length > 0 && (
+          <div className="mt-16">
+            <h3 className="flex items-center gap-2 text-xl font-serif text-red-400 mb-6 border-b border-red-900/30 pb-2">
+              <AlertTriangle size={20} /> Common Pitfalls
+            </h3>
+            <div className="space-y-6">
+              {previewData.pitfalls.map((pitfall: any, index: number) => (
+                <div key={index} className="bg-red-950/10 border border-red-900/30 rounded-lg p-6">
+                  <h4 className="text-lg font-serif text-red-300 mb-2">{pitfall.title}</h4>
+                  <div className="prose prose-invert prose-sm text-slate-400">
+                    <ReactMarkdown>{pitfall.description}</ReactMarkdown>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Practice Section */}
+        {previewData.practice && previewData.practice.length > 0 && (
+          <div className="mt-16">
+            <h3 className="flex items-center gap-2 text-xl font-serif text-emerald-400 mb-6 border-b border-emerald-900/30 pb-2">
+              <Dumbbell size={20} /> Practice Rituals
+            </h3>
+            <div className="space-y-8">
+              {previewData.practice.map((practice: any, index: number) => (
+                <div key={index} className="relative pl-8 border-l-2 border-emerald-900/50">
+                  <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-void border-2 border-emerald-700" />
+                  <h4 className="text-lg font-serif text-emerald-300 mb-2">{practice.title}</h4>
+                  <div className="prose prose-invert prose-sm text-slate-300">
+                    <ReactMarkdown>{practice.description}</ReactMarkdown>
+                  </div>
+                  {practice.media && <MediaFrame src={practice.media} title={practice.title} />}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </>
   );
