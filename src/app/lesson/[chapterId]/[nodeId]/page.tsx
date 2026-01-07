@@ -7,7 +7,7 @@ import { ForgeHeader } from "@/components/layout/ForgeHeader";
 import { RuneTablet } from "@/components/lesson/RuneTablet";
 import { HoldButton } from "@/components/lesson/HoldButton";
 import { MediaFrame } from "@/components/lesson/MediaFrame";
-import { ChevronLeft, Map as MapIcon, Loader2, AlertTriangle, Dumbbell } from "lucide-react";
+import { ChevronLeft, Map as MapIcon, Loader2, AlertTriangle, Dumbbell, CheckSquare, Square } from "lucide-react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { CurriculumNode } from "@/lib/types";
@@ -23,6 +23,7 @@ export default function LessonPage() {
   // Dynamic Data State
   const [node, setNode] = useState<CurriculumNode | null>(null);
   const [loading, setLoading] = useState(true);
+  const [checkedPractice, setCheckedPractice] = useState<number[]>([]);
 
   const chapterId = params.chapterId as string;
   const nodeId = params.nodeId as string;
@@ -32,6 +33,16 @@ export default function LessonPage() {
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  const togglePractice = (index: number) => {
+    setCheckedPractice(prev => 
+      prev.includes(index) 
+        ? prev.filter(i => i !== index) 
+        : [...prev, index]
+    );
+  };
+
+  const arePracticesComplete = !node?.practice || node.practice.length === 0 || node.practice.every((_, i) => checkedPractice.includes(i));
 
   // --- DATA FETCHING (DB) ---
   useEffect(() => {
@@ -218,16 +229,38 @@ export default function LessonPage() {
                     <Dumbbell size={20} /> Practice Rituals
                   </h3>
                   <div className="space-y-8">
-                    {node.practice.map((practice, index) => (
-                      <div key={index} className="relative pl-8 border-l-2 border-emerald-900/50">
-                        <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-void border-2 border-emerald-700" />
-                        <h4 className="text-lg font-serif text-emerald-300 mb-2">{practice.title}</h4>
-                        <div className="prose prose-invert prose-sm text-slate-300">
-                          <ReactMarkdown>{practice.description}</ReactMarkdown>
+                    {node.practice.map((practice, index) => {
+                      const isChecked = checkedPractice.includes(index);
+                      return (
+                        <div 
+                          key={index} 
+                          className={`relative pl-8 border-l-2 transition-all duration-300 ${isChecked ? 'border-emerald-500/50 opacity-50' : 'border-emerald-900/50'}`}
+                        >
+                          {/* Checkbox Trigger */}
+                          <div 
+                            onClick={() => togglePractice(index)}
+                            className="absolute -left-[11px] top-0 cursor-pointer bg-void hover:scale-110 transition-transform z-10"
+                          >
+                            {isChecked ? (
+                              <CheckSquare size={20} className="text-emerald-500 fill-emerald-950" />
+                            ) : (
+                              <Square size={20} className="text-emerald-700 hover:text-emerald-500" />
+                            )}
+                          </div>
+
+                          <div onClick={() => togglePractice(index)} className="cursor-pointer group">
+                            <h4 className={`text-lg font-serif mb-2 transition-colors ${isChecked ? 'text-emerald-500/70 line-through decoration-emerald-500/30' : 'text-emerald-300 group-hover:text-emerald-200'}`}>
+                              {practice.title}
+                            </h4>
+                            <div className={`prose prose-invert prose-sm transition-opacity ${isChecked ? 'text-slate-600' : 'text-slate-300'}`}>
+                              <ReactMarkdown>{practice.description}</ReactMarkdown>
+                            </div>
+                          </div>
+                          
+                          {practice.media && <MediaFrame src={practice.media} title={practice.title} />}
                         </div>
-                        <MediaFrame src={practice.media} title={practice.title} />
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -236,13 +269,14 @@ export default function LessonPage() {
             <div className="mt-20 pt-10 border-t border-slate-800">
               <div className="max-w-md mx-auto text-center space-y-6">
                 <p className="text-slate-500 font-serif italic">
-                  "Is the Trial complete?"
+                  {arePracticesComplete ? "\"Is the Trial complete?\"" : "Complete all Practice Rituals to proceed."}
                 </p>
                 
                 <HoldButton 
                     onSuccess={handleComplete} 
                     completed={isCompleted}
-                    label="Hold to Complete"
+                    disabled={!arePracticesComplete}
+                    label={arePracticesComplete ? "Hold to Complete" : "Complete Rituals First"}
                 />
               </div>
             </div>

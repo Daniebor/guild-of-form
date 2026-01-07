@@ -8,14 +8,15 @@ interface HoldButtonProps {
   onSuccess: () => void;
   label?: string;
   completed?: boolean;
+  disabled?: boolean;
 }
 
-export const HoldButton = ({ onSuccess, label = "Hold to Complete", completed = false }: HoldButtonProps) => {
+export const HoldButton = ({ onSuccess, label = "Hold to Complete", completed = false, disabled = false }: HoldButtonProps) => {
   const [isHolding, setIsHolding] = useState(false);
   const controls = useAnimation();
 
   const handleStart = () => {
-    if (completed) return;
+    if (completed || disabled) return;
     setIsHolding(true);
     controls.start({
       width: "100%",
@@ -24,7 +25,7 @@ export const HoldButton = ({ onSuccess, label = "Hold to Complete", completed = 
   };
 
   const handleEnd = () => {
-    if (completed) return;
+    if (completed || disabled) return;
     setIsHolding(false);
     controls.stop();
     controls.set({ width: "0%" });
@@ -46,7 +47,10 @@ export const HoldButton = ({ onSuccess, label = "Hold to Complete", completed = 
   }
 
   return (
-    <div className="relative w-full h-14 rounded bg-slate-900 border border-slate-700 overflow-hidden select-none cursor-pointer group">
+    <div className={clsx(
+      "relative w-full h-14 rounded bg-slate-900 border border-slate-700 overflow-hidden select-none group",
+      disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+    )}>
       {/* Background Fill Animation */}
       <motion.div
         className="absolute top-0 left-0 h-full bg-amber-600"
