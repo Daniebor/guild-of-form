@@ -55,11 +55,13 @@ export interface UserState {
   streak: number;
   lastLoginDate: string | null;
   completedNodes: string[];
+  completedPractices: string[];
   unlockedChapters: string[];
 }
 
 export interface UserActions {
   completeNode: (nodeId: string) => void;
+  togglePractice: (practiceId: string) => void;
   checkStreak: () => void;
   addXP: (amount: number) => void;
   unlockChapter: (chapterId: string) => void;

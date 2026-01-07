@@ -17,13 +17,12 @@ import remarkGfm from 'remark-gfm';
 export default function LessonPage() {
   const params = useParams();
   const router = useRouter();
-  const { completeNode, completedNodes } = useUserStore();
+  const { completeNode, completedNodes, completedPractices, togglePractice } = useUserStore();
   const [mounted, setMounted] = useState(false);
   
   // Dynamic Data State
   const [node, setNode] = useState<CurriculumNode | null>(null);
   const [loading, setLoading] = useState(true);
-  const [checkedPractice, setCheckedPractice] = useState<number[]>([]);
 
   const chapterId = params.chapterId as string;
   const nodeId = params.nodeId as string;
@@ -34,15 +33,9 @@ export default function LessonPage() {
     setMounted(true);
   }, []);
 
-  const togglePractice = (index: number) => {
-    setCheckedPractice(prev => 
-      prev.includes(index) 
-        ? prev.filter(i => i !== index) 
-        : [...prev, index]
-    );
-  };
+  const getPracticeId = (index: number) => `${nodeId}-practice-${index}`;
 
-  const arePracticesComplete = !node?.practice || node.practice.length === 0 || node.practice.every((_, i) => checkedPractice.includes(i));
+  const arePracticesComplete = !node?.practice || node.practice.length === 0 || node.practice.every((_, i) => completedPractices.includes(getPracticeId(i)));
 
   // --- DATA FETCHING (DB) ---
   useEffect(() => {
@@ -230,7 +223,8 @@ export default function LessonPage() {
                   </h3>
                   <div className="space-y-8">
                     {node.practice.map((practice, index) => {
-                      const isChecked = checkedPractice.includes(index);
+                      const pId = getPracticeId(index);
+                      const isChecked = completedPractices.includes(pId);
                       return (
                         <div 
                           key={index} 
@@ -238,7 +232,7 @@ export default function LessonPage() {
                         >
                           {/* Checkbox Trigger */}
                           <div 
-                            onClick={() => togglePractice(index)}
+                            onClick={() => togglePractice(pId)}
                             className="absolute -left-[11px] top-0 cursor-pointer bg-void hover:scale-110 transition-transform z-10"
                           >
                             {isChecked ? (
@@ -248,7 +242,7 @@ export default function LessonPage() {
                             )}
                           </div>
 
-                          <div onClick={() => togglePractice(index)} className="cursor-pointer group">
+                          <div onClick={() => togglePractice(pId)} className="cursor-pointer group">
                             <h4 className={`text-lg font-serif mb-2 transition-colors ${isChecked ? 'text-emerald-500/70 line-through decoration-emerald-500/30' : 'text-emerald-300 group-hover:text-emerald-200'}`}>
                               {practice.title}
                             </h4>

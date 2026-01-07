@@ -13,22 +13,27 @@ const INITIAL_STATE: UserState = {
   streak: 0,
   lastLoginDate: null,
   completedNodes: [],
+  completedPractices: [],
   unlockedChapters: ['chapter-1'],
 };
 
 // Helper to push state to Supabase
 const pushUpdate = async (userId: string, updates: Partial<UserState>) => {
   if (!userId) return;
+  const payload: any = {
+    updated_at: new Date().toISOString(),
+  };
+  
+  if (updates.xp !== undefined) payload.xp = updates.xp;
+  if (updates.streak !== undefined) payload.streak = updates.streak;
+  if (updates.lastLoginDate !== undefined) payload.last_login_date = updates.lastLoginDate;
+  if (updates.completedNodes !== undefined) payload.completed_nodes = updates.completedNodes;
+  if (updates.completedPractices !== undefined) payload.completed_practices = updates.completedPractices;
+  if (updates.unlockedChapters !== undefined) payload.unlocked_chapters = updates.unlockedChapters;
+
   const { error } = await supabase
     .from('profiles')
-    .update({
-      xp: updates.xp,
-      streak: updates.streak,
-      last_login_date: updates.lastLoginDate,
-      completed_nodes: updates.completedNodes, // Stored as JSONB
-      unlocked_chapters: updates.unlockedChapters, // Stored as JSONB
-      updated_at: new Date().toISOString(),
-    })
+    .update(payload)
     .eq('id', userId);
   
   if (error) console.error('Supabase Sync Error:', error);
@@ -64,12 +69,14 @@ export const useUserStore = create<Store>()(
         
         const mergedXP = Math.max(local.xp, profile.xp || 0);
         const mergedNodes = Array.from(new Set([...local.completedNodes, ...(profile.completed_nodes || [])]));
+        const mergedPractices = Array.from(new Set([...local.completedPractices, ...(profile.completed_practices || [])]));
         const mergedChapters = Array.from(new Set([...local.unlockedChapters, ...(profile.unlocked_chapters || [])]));
         
         const newState = {
           xp: mergedXP,
           streak: profile.streak || local.streak, // Trust remote streak usually
           completedNodes: mergedNodes,
+          completedPractices: mergedPractices,
           unlockedChapters: mergedChapters,
           lastLoginDate: profile.last_login_date || local.lastLoginDate,
         };
@@ -105,6 +112,26 @@ export const useUserStore = create<Store>()(
 
           return { unlockedChapters: newChapters };
         }),
+
+      togglePractice: (practiceId) => {
+        const state = get();
+        const isCompleted = state.completedPractices.includes(practiceId);
+        let newCompletedPractices;
+
+        if (isCompleted) {
+          newCompletedPractices = state.completedPractices.filter(id => id !== practiceId);
+        } else {
+          newCompletedPractices = [...state.completedPractices, practiceId];
+        }
+
+        const updates = { completedPractices: newCompletedPractices };
+        
+        set(updates);
+        
+        supabase.auth.getSession().then(({ data }) => {
+             if (data.session) pushUpdate(data.session.user.id, updates);
+        });
+      },
 
       completeNode: (nodeId) => {
         const state = get();
