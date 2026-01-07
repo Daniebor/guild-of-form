@@ -122,6 +122,7 @@ export const useUserStore = create<Store>()(
           newCompletedPractices = state.completedPractices.filter(id => id !== practiceId);
         } else {
           newCompletedPractices = [...state.completedPractices, practiceId];
+          get().checkStreak();
         }
 
         const updates = { completedPractices: newCompletedPractices };
@@ -157,6 +158,7 @@ export const useUserStore = create<Store>()(
         };
 
         set(updates);
+        get().checkStreak();
 
         // Fire and forget sync
         supabase.auth.getSession().then(({ data }) => {
@@ -179,7 +181,10 @@ export const useUserStore = create<Store>()(
           const diffTime = Math.abs(now.getTime() - lastLogin.getTime());
           const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
 
-          if (diffDays === 2) { 
+          if (state.streak === 0) {
+            newStreak = 1;
+            shouldUpdate = true;
+          } else if (diffDays === 2) { 
             newStreak += 1;
             shouldUpdate = true;
           } else if (diffDays > 2) {
