@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/Button";
 import { useUserStore } from "@/lib/store/userStore";
 import { MediaFrame } from "@/components/lesson/MediaFrame";
 import { Drill } from "@/lib/types"; // Import Drill type
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface AnvilOverlayProps {
   isOpen: boolean;
@@ -140,10 +142,11 @@ export const AnvilOverlay = ({ isOpen, onClose, requiredXP, currentXP, onChallen
                     <div className="grid grid-cols-1 gap-4 pb-10">
                       {drills.length > 0 ? (
                         drills.map((drill) => (
-                          <button
+                          <div
+                            role="button"
                             key={drill.id}
                             onClick={() => setSelectedDrill(drill)}
-                            className="group flex flex-col items-start p-4 bg-slate-800/50 border border-slate-700 hover:border-amber-500/50 hover:bg-slate-800 transition-all rounded text-left relative overflow-hidden"
+                            className="group flex flex-col items-start p-4 bg-slate-800/50 border border-slate-700 hover:border-amber-500/50 hover:bg-slate-800 transition-all rounded text-left relative overflow-hidden cursor-pointer"
                           >
                             <div className="flex justify-between w-full mb-2 relative z-10">
                               <span className="font-serif text-lg text-slate-200 group-hover:text-amber-400 transition-colors">
@@ -153,9 +156,11 @@ export const AnvilOverlay = ({ isOpen, onClose, requiredXP, currentXP, onChallen
                                 <Clock size={12} /> {drill.duration}
                               </span>
                             </div>
-                            <p className="text-sm text-slate-400 line-clamp-2 relative z-10">
-                              {drill.description}
-                            </p>
+                            <div className="text-sm text-slate-400 relative z-10 prose prose-invert prose-sm max-w-none [&>p]:line-clamp-2 [&>p]:m-0">
+                              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                {drill.description}
+                              </ReactMarkdown>
+                            </div>
                             <div className="mt-3 flex items-center gap-4 text-xs font-mono relative z-10">
                                 <span className="text-amber-600/80 group-hover:text-amber-500">
                                     REWARD: +{drill.xp} XP
@@ -166,7 +171,7 @@ export const AnvilOverlay = ({ isOpen, onClose, requiredXP, currentXP, onChallen
                             </div>
                             {/* Hover Glow */}
                             <div className="absolute inset-0 bg-gradient-to-r from-amber-500/0 via-amber-500/5 to-amber-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-                          </button>
+                          </div>
                         ))
                       ) : (
                         <div className="text-center p-8 text-slate-500 border border-dashed border-slate-700 rounded">
@@ -193,9 +198,18 @@ export const AnvilOverlay = ({ isOpen, onClose, requiredXP, currentXP, onChallen
                         </div>
                       </div>
                       
-                      <p className="text-lg text-slate-200 leading-relaxed">
-                        {selectedDrill.description}
-                      </p>
+                      <div className="prose prose-invert prose-lg text-slate-200 leading-relaxed">
+                        <ReactMarkdown 
+                          remarkPlugins={[remarkGfm]}
+                          components={{
+                            strong: ({node, ...props}) => <span className="text-amber-400 font-bold" {...props} />,
+                            a: ({node, ...props}) => <a className="text-amber-500 hover:text-amber-400 underline" target="_blank" rel="noopener noreferrer" {...props} />,
+                            code: ({node, ...props}) => <code className="bg-slate-800 px-1 py-0.5 rounded text-amber-200 font-mono text-sm" {...props} />,
+                          }}
+                        >
+                          {selectedDrill.description}
+                        </ReactMarkdown>
+                      </div>
                     </div>
 
                     <div className="space-y-4">
@@ -208,7 +222,17 @@ export const AnvilOverlay = ({ isOpen, onClose, requiredXP, currentXP, onChallen
                             <span className="flex-shrink-0 w-6 h-6 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-mono text-slate-500">
                               {index + 1}
                             </span>
-                            <span>{step}</span>
+                            <span className="prose prose-invert prose-sm max-w-none">
+                              <ReactMarkdown 
+                                remarkPlugins={[remarkGfm]}
+                                components={{
+                                  strong: ({node, ...props}) => <span className="text-amber-400 font-bold" {...props} />,
+                                  code: ({node, ...props}) => <code className="bg-slate-800 px-1 py-0.5 rounded text-amber-200 font-mono text-xs" {...props} />,
+                                }}
+                              >
+                                {step}
+                              </ReactMarkdown>
+                            </span>
                           </li>
                         ))}
                       </ul>
