@@ -403,7 +403,7 @@ export default function AdminCMS() {
 
                     <div>
                       <label className="text-[10px] uppercase text-slate-500 block mb-1">Description</label>
-                      <textarea value={formData.description} onChange={e => updateField('description', e.target.value)} className="w-full bg-slate-900 border border-slate-700 p-2 rounded text-slate-300 text-sm h-24" />
+                      <textarea value={formData.description} onChange={e => updateField('description', e.target.value)} className="w-full bg-slate-900 border border-slate-700 p-2 rounded text-slate-300 text-sm h-48" />
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
@@ -506,7 +506,7 @@ export default function AdminCMS() {
                           <textarea 
                             value={step.description} 
                             onChange={e => updateListItem('steps', idx, 'description', e.target.value)}
-                            className="w-full bg-slate-950/50 border border-slate-800 p-2 rounded text-xs text-slate-300 h-20 focus:border-amber-500 outline-none"
+                            className="w-full bg-slate-950/50 border border-slate-800 p-2 rounded text-xs text-slate-300 h-48 focus:border-amber-500 outline-none"
                             placeholder="Description..."
                           />
                           <div>
@@ -548,7 +548,7 @@ export default function AdminCMS() {
                           <textarea 
                             value={pitfall.description} 
                             onChange={e => updateListItem('pitfalls', idx, 'description', e.target.value)}
-                            className="w-full bg-slate-950/50 border border-red-900/30 p-2 rounded text-xs text-slate-300 h-20 focus:border-red-500 outline-none"
+                            className="w-full bg-slate-950/50 border border-red-900/30 p-2 rounded text-xs text-slate-300 h-48 focus:border-red-500 outline-none"
                             placeholder="Description..."
                           />
                         </div>
@@ -582,7 +582,7 @@ export default function AdminCMS() {
                           <textarea 
                             value={item.description} 
                             onChange={e => updateListItem('practice', idx, 'description', e.target.value)}
-                            className="w-full bg-slate-950/50 border border-emerald-900/30 p-2 rounded text-xs text-slate-300 h-20 focus:border-emerald-500 outline-none"
+                            className="w-full bg-slate-950/50 border border-emerald-900/30 p-2 rounded text-xs text-slate-300 h-48 focus:border-emerald-500 outline-none"
                             placeholder="Description..."
                           />
                           <div>
@@ -621,7 +621,7 @@ export default function AdminCMS() {
                              <input type="number" value={drill.xp} onChange={e => updateListItem('drills', idx, 'xp', Number(e.target.value))} className="bg-slate-950 p-2 rounded text-xs text-slate-300" placeholder="XP" />
                              <input value={drill.duration} onChange={e => updateListItem('drills', idx, 'duration', e.target.value)} className="bg-slate-950 p-2 rounded text-xs text-slate-300" placeholder="Duration" />
                            </div>
-                           <textarea value={drill.description} onChange={e => updateListItem('drills', idx, 'description', e.target.value)} className="w-full bg-slate-950 p-2 rounded text-xs text-slate-300 h-16" placeholder="Drill description..." />
+                           <textarea value={drill.description} onChange={e => updateListItem('drills', idx, 'description', e.target.value)} className="w-full bg-slate-950 p-2 rounded text-xs text-slate-300 h-32" placeholder="Drill description..." />
                            
                            {/* Media Input for Drill */}
                            <div>
