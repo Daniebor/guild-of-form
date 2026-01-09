@@ -56,12 +56,14 @@ export interface UserState {
   lastLoginDate: string | null;
   completedNodes: string[];
   completedPractices: string[];
+  completedDrills: string[];
   unlockedChapters: string[];
 }
 
 export interface UserActions {
   completeNode: (nodeId: string) => void;
   togglePractice: (practiceId: string) => void;
+  completeDrill: (drillId: string) => void;
   checkStreak: () => void;
   addXP: (amount: number) => void;
   unlockChapter: (chapterId: string) => void;

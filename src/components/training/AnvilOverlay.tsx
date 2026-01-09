@@ -9,6 +9,7 @@ import { MediaFrame } from "@/components/lesson/MediaFrame";
 import { Drill } from "@/lib/types"; // Import Drill type
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { CheckCircle2 } from "lucide-react";
 
 interface AnvilOverlayProps {
   isOpen: boolean;
@@ -20,7 +21,7 @@ interface AnvilOverlayProps {
 }
 
 export const AnvilOverlay = ({ isOpen, onClose, requiredXP, currentXP, onChallenge, drills }: AnvilOverlayProps) => {
-  const { addXP, checkStreak } = useUserStore(); // Get checkStreak
+  const { addXP, checkStreak, completedDrills, completeDrill } = useUserStore();
   const [selectedDrill, setSelectedDrill] = useState<Drill | null>(null);
   
   const deficit = Math.max(0, requiredXP - currentXP);
@@ -28,9 +29,16 @@ export const AnvilOverlay = ({ isOpen, onClose, requiredXP, currentXP, onChallen
 
   const handleCompleteDrill = () => {
     if (selectedDrill) {
-      addXP(selectedDrill.xp);
-      checkStreak(); // Update/Maintain streak on drill completion
-      setSelectedDrill(null); // Go back to list
+      const drillId = String(selectedDrill.id);
+      const isAlreadyCompleted = completedDrills.includes(drillId);
+
+      if (!isAlreadyCompleted) {
+        addXP(selectedDrill.xp);
+        completeDrill(drillId);
+      }
+      
+      checkStreak(); // Always maintain streak
+      setSelectedDrill(null); 
     }
   };
 
@@ -38,6 +46,8 @@ export const AnvilOverlay = ({ isOpen, onClose, requiredXP, currentXP, onChallen
   useEffect(() => {
     if (!isOpen) setSelectedDrill(null);
   }, [isOpen]);
+
+  const isSelectedCompleted = selectedDrill ? completedDrills.includes(String(selectedDrill.id)) : false;
 
   return (
     <AnimatePresence>
@@ -141,38 +151,44 @@ export const AnvilOverlay = ({ isOpen, onClose, requiredXP, currentXP, onChallen
                     {/* Drills Grid - Always visible now */}
                     <div className="grid grid-cols-1 gap-4 pb-10">
                       {drills.length > 0 ? (
-                        drills.map((drill) => (
-                          <div
-                            role="button"
-                            key={drill.id}
-                            onClick={() => setSelectedDrill(drill)}
-                            className="group flex flex-col items-start p-4 bg-slate-800/50 border border-slate-700 hover:border-amber-500/50 hover:bg-slate-800 transition-all rounded text-left relative overflow-hidden cursor-pointer"
-                          >
-                            <div className="flex justify-between w-full mb-2 relative z-10">
-                              <span className="font-serif text-lg text-slate-200 group-hover:text-amber-400 transition-colors">
-                                {drill.title}
-                              </span>
-                              <span className="text-xs font-mono text-slate-500 border border-slate-600 px-2 py-1 rounded flex items-center gap-1">
-                                <Clock size={12} /> {drill.duration}
-                              </span>
-                            </div>
-                            <div className="text-sm text-slate-400 relative z-10 prose prose-invert prose-sm max-w-none [&>p]:line-clamp-2 [&>p]:m-0">
-                              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                {drill.description}
-                              </ReactMarkdown>
-                            </div>
-                            <div className="mt-3 flex items-center gap-4 text-xs font-mono relative z-10">
-                                <span className="text-amber-600/80 group-hover:text-amber-500">
-                                    REWARD: +{drill.xp} XP
+                        drills.map((drill) => {
+                          const isCompleted = completedDrills.includes(String(drill.id));
+                          return (
+                            <div
+                              role="button"
+                              key={drill.id}
+                              onClick={() => setSelectedDrill(drill)}
+                              className={`group flex flex-col items-start p-4 border transition-all rounded text-left relative overflow-hidden cursor-pointer ${isCompleted ? 'bg-emerald-950/10 border-emerald-900/30' : 'bg-slate-800/50 border-slate-700 hover:border-amber-500/50 hover:bg-slate-800'}`}
+                            >
+                              <div className="flex justify-between w-full mb-2 relative z-10">
+                                <span className={`font-serif text-lg transition-colors ${isCompleted ? 'text-emerald-400' : 'text-slate-200 group-hover:text-amber-400'}`}>
+                                  {drill.title}
                                 </span>
-                                <span className="flex items-center gap-1 text-slate-500 group-hover:text-amber-500/70">
-                                    <Flame size={12} /> Streak Active
-                                </span>
+                                <div className="flex gap-2">
+                                  {isCompleted && <span className="text-emerald-500 bg-emerald-950/30 border border-emerald-900/50 px-2 py-1 rounded text-xs font-mono flex items-center gap-1"><CheckCircle2 size={12} /> Done</span>}
+                                  <span className="text-xs font-mono text-slate-500 border border-slate-600 px-2 py-1 rounded flex items-center gap-1">
+                                    <Clock size={12} /> {drill.duration}
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="text-sm text-slate-400 relative z-10 prose prose-invert prose-sm max-w-none [&>p]:line-clamp-2 [&>p]:m-0">
+                                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                  {drill.description}
+                                </ReactMarkdown>
+                              </div>
+                              <div className="mt-3 flex items-center gap-4 text-xs font-mono relative z-10">
+                                  <span className={`${isCompleted ? 'text-slate-500' : 'text-amber-600/80 group-hover:text-amber-500'}`}>
+                                      {isCompleted ? 'REWARD: 0 XP (Completed)' : `REWARD: +${drill.xp} XP`}
+                                  </span>
+                                  <span className="flex items-center gap-1 text-slate-500 group-hover:text-amber-500/70">
+                                      <Flame size={12} /> Streak Active
+                                  </span>
+                              </div>
+                              {/* Hover Glow */}
+                              {!isCompleted && <div className="absolute inset-0 bg-gradient-to-r from-amber-500/0 via-amber-500/5 to-amber-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />}
                             </div>
-                            {/* Hover Glow */}
-                            <div className="absolute inset-0 bg-gradient-to-r from-amber-500/0 via-amber-500/5 to-amber-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-                          </div>
-                        ))
+                          );
+                        })
                       ) : (
                         <div className="text-center p-8 text-slate-500 border border-dashed border-slate-700 rounded">
                           No drills available for this challenge yet.
@@ -193,7 +209,9 @@ export const AnvilOverlay = ({ isOpen, onClose, requiredXP, currentXP, onChallen
                       <div className="flex items-center justify-between text-sm text-slate-400 font-mono">
                         <span className="flex items-center gap-2"><Clock size={16}/> {selectedDrill.duration}</span>
                         <div className="flex gap-4">
-                            <span className="text-amber-500">+ {selectedDrill.xp} XP</span>
+                            <span className={isSelectedCompleted ? "text-emerald-500" : "text-amber-500"}>
+                              {isSelectedCompleted ? "Completed (+0 XP)" : `+ ${selectedDrill.xp} XP`}
+                            </span>
                             <span className="text-slate-500 flex items-center gap-1"><Flame size={14} /> Streak</span>
                         </div>
                       </div>
@@ -245,7 +263,7 @@ export const AnvilOverlay = ({ isOpen, onClose, requiredXP, currentXP, onChallen
                         size="lg" 
                         className="w-full"
                       >
-                        Complete Drill
+                        {isSelectedCompleted ? "Do it Again (Streak Only)" : "Complete Drill"}
                       </Button>
                       <p className="text-center text-xs text-slate-600 mt-4">
                         Honesty is the virtue of the Architect.

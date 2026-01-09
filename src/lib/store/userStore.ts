@@ -14,6 +14,7 @@ const INITIAL_STATE: UserState = {
   lastLoginDate: null,
   completedNodes: [],
   completedPractices: [],
+  completedDrills: [],
   unlockedChapters: ['chapter-1'],
 };
 
@@ -29,6 +30,7 @@ const pushUpdate = async (userId: string, updates: Partial<UserState>) => {
   if (updates.lastLoginDate !== undefined) payload.last_login_date = updates.lastLoginDate;
   if (updates.completedNodes !== undefined) payload.completed_nodes = updates.completedNodes;
   if (updates.completedPractices !== undefined) payload.completed_practices = updates.completedPractices;
+  if (updates.completedDrills !== undefined) payload.completed_drills = updates.completedDrills;
   if (updates.unlockedChapters !== undefined) payload.unlocked_chapters = updates.unlockedChapters;
 
   const { error } = await supabase
@@ -70,6 +72,7 @@ export const useUserStore = create<Store>()(
         const mergedXP = Math.max(local.xp, profile.xp || 0);
         const mergedNodes = Array.from(new Set([...local.completedNodes, ...(profile.completed_nodes || [])]));
         const mergedPractices = Array.from(new Set([...local.completedPractices, ...(profile.completed_practices || [])]));
+        const mergedDrills = Array.from(new Set([...local.completedDrills, ...(profile.completed_drills || [])]));
         const mergedChapters = Array.from(new Set([...local.unlockedChapters, ...(profile.unlocked_chapters || [])]));
         
         const newState = {
@@ -77,6 +80,7 @@ export const useUserStore = create<Store>()(
           streak: profile.streak || local.streak, // Trust remote streak usually
           completedNodes: mergedNodes,
           completedPractices: mergedPractices,
+          completedDrills: mergedDrills,
           unlockedChapters: mergedChapters,
           lastLoginDate: profile.last_login_date || local.lastLoginDate,
         };
@@ -112,6 +116,20 @@ export const useUserStore = create<Store>()(
 
           return { unlockedChapters: newChapters };
         }),
+
+      completeDrill: (drillId) => {
+        const state = get();
+        if (state.completedDrills.includes(drillId)) return;
+
+        const newCompletedDrills = [...state.completedDrills, drillId];
+        const updates = { completedDrills: newCompletedDrills };
+        
+        set(updates);
+        
+        supabase.auth.getSession().then(({ data }) => {
+             if (data.session) pushUpdate(data.session.user.id, updates);
+        });
+      },
 
       togglePractice: (practiceId) => {
         const state = get();
