@@ -95,7 +95,7 @@ const CanvasNode = ({ node, status, onClick }: { node: CurriculumNode, status: N
     <div
       className="absolute flex flex-col items-center gap-2 group"
       style={{ 
-        left: -node.position.x, 
+        left: node.position.x, 
         top: -node.position.y,
         width: size,
         height: size,
@@ -200,11 +200,20 @@ export default function MapPage() {
           grouped[row.chapter_id].push(node);
         });
 
-        const chapters: Chapter[] = Object.keys(grouped).sort().map(chapterId => ({
-          id: chapterId,
-          title: CHAPTER_TITLES[chapterId] || chapterId.toUpperCase(),
-          nodes: grouped[chapterId]
-        }));
+        const chapters: Chapter[] = Object.keys(grouped).sort().map(chapterId => {
+          // Sort nodes: Lessons first (by ID), then Bosses
+          const sortedNodes = grouped[chapterId].sort((a, b) => {
+             if (a.type === 'lesson' && b.type === 'boss') return -1;
+             if (a.type === 'boss' && b.type === 'lesson') return 1;
+             return a.id.localeCompare(b.id);
+          });
+          
+          return {
+             id: chapterId,
+             title: CHAPTER_TITLES[chapterId] || chapterId.toUpperCase(),
+             nodes: sortedNodes
+          };
+        });
         setCurriculum(chapters);
       }
       setLoadingData(false);
@@ -235,8 +244,8 @@ export default function MapPage() {
       const screenH = window.innerHeight;
       
       setViewState({
-        x: screenW / 2 - targetNode.position.x,
-        y: screenH / 2 - targetNode.position.y,
+        x: screenW / 2 - targetNode.position.x, // Adjusted for positive X
+        y: screenH / 2 - (-targetNode.position.y), // Keeping Y negative logic
         scale: 1
       });
     }
@@ -427,8 +436,8 @@ export default function MapPage() {
                       return (
                         <line 
                           key={`${reqId}-${node.id}`}
-                          x1={-target.position.x} y1={-target.position.y}
-                          x2={-node.position.x} y2={-node.position.y}
+                          x1={target.position.x} y1={-target.position.y}
+                          x2={node.position.x} y2={-node.position.y}
                           strokeWidth={2}
                           className={clsx(isUnlocked ? "stroke-amber-500/50" : "stroke-slate-800", "pointer-events-none")}
                           strokeDasharray={isUnlocked ? "0" : "8 8"}
@@ -453,7 +462,7 @@ export default function MapPage() {
                  <div 
                     className="absolute text-slate-700/50 font-serif font-bold text-6xl pointer-events-none whitespace-nowrap z-0"
                     style={{ 
-                        left: -chapter.nodes[0].position.x, 
+                        left: chapter.nodes[0].position.x, 
                         top: -chapter.nodes[0].position.y - 100,
                         transform: 'translate(-50%, -50%)'
                     }}
@@ -479,7 +488,7 @@ export default function MapPage() {
               if (target) {
                  setViewState({
                     x: window.innerWidth / 2 - target.position.x,
-                    y: window.innerHeight / 2 - target.position.y,
+                    y: window.innerHeight / 2 - (-target.position.y),
                     scale: 1
                  });
               }
